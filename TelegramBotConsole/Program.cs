@@ -7,6 +7,7 @@ using System.Linq;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using Viber.Bot;
 
 namespace TelegramBotConsole
 {
@@ -16,7 +17,7 @@ namespace TelegramBotConsole
 
         static void Main()
         {
-            botClient = new TelegramBotClient(AppInfo.Token, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
+            botClient = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
 
             var me = botClient.GetMeAsync().Result;
             Console.WriteLine(
