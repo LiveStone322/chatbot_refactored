@@ -13,19 +13,38 @@ namespace TelegramBotConsole
 {
     class Program
     {
-        static ITelegramBotClient botClient;
+        static ITelegramBotClient telegramBot;
+        static IViberBotClient viberBot;
 
         static void Main()
         {
-            botClient = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
+            telegramBot = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
+            viberBot = new ViberBotClient(AppInfo.ViberToken);
 
-            var me = botClient.GetMeAsync().Result;
-            Console.WriteLine(
-              $"{me.FirstName} работает."
-            );
 
-            botClient.OnMessage += Bot_OnMessage;
-            botClient.StartReceiving();
+            //viber
+            try
+            {
+                var viber = viberBot.GetAccountInfoAsync().Result;
+                Console.WriteLine(
+                  $"{viber.Name} работает."
+                );
+                
+            }
+            catch (Exception e) { Console.WriteLine("Ошибка при запуске Viber бота: " + e.Message); }
+
+            //telegram
+            try
+            {
+                var telegram = telegramBot.GetMeAsync().Result;
+                Console.WriteLine(
+                  $"{telegram.FirstName} работает."
+                );
+                telegramBot.OnMessage += Bot_OnMessage;
+                telegramBot.StartReceiving();
+            }
+            catch (Exception e) { Console.WriteLine("Ошибка при запуске Telegram бота: " + e.Message); }
+
             Thread.Sleep(int.MaxValue);
         }
 
@@ -75,7 +94,7 @@ namespace TelegramBotConsole
                         id_source = 1
                     });
 
-                    await botClient.SendTextMessageAsync(
+                    await telegramBot.SendTextMessageAsync(
                           chatId: e.Message.Chat,
                           text: "Изображение сохранено"
                         );
@@ -99,7 +118,7 @@ namespace TelegramBotConsole
                     if (nextMessage.Item2 != -1)
                     {
                         dbUser.id_last_question = nextMessage.Item2;
-                        await botClient.SendTextMessageAsync(
+                        await telegramBot.SendTextMessageAsync(
                           chatId: e.Message.Chat,
                           text: ctx.Questions.Find(nextMessage.Item2).name
                         );
@@ -113,10 +132,10 @@ namespace TelegramBotConsole
         {
             try
             {
-                var file = await botClient.GetFileAsync(fileId);
+                var file = await telegramBot.GetFileAsync(fileId);
                 using (var stream = new FileStream(path, FileMode.Create))
                 {
-                    await botClient.DownloadFileAsync(file.FilePath, stream);
+                    await telegramBot.DownloadFileAsync(file.FilePath, stream);
                 }
             }
             catch (Exception ex)
