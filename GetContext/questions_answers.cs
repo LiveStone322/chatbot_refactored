@@ -11,7 +11,9 @@ namespace GetContext
     {
         public int id { get; set; }
 
-        public int id_user { get; set; }
+        [Required]
+        [StringLength(8000)]
+        public string id_user { get; set; }
 
         public int id_question { get; set; }
 

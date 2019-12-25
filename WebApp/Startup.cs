@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using WebApp.Models;
+using Viber.Bot;
 
 namespace WebApp
 {
@@ -31,6 +33,8 @@ namespace WebApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            ViberBot.viberBot = new ViberBotClient(AppInfo.ViberToken);
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

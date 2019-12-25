@@ -3,15 +3,15 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
-namespace TelegramBotConsole
+namespace WebApp
 {
     class HealthBotContext : DbContext
     {
-        public DbSet<users> Users { get; set; }
-        public DbSet<files> Files { get; set; }
-        public DbSet<questions> Questions { get; set; }
-        public DbSet<questions_answers> Questions_answers { get; set; }
-        public DbSet<sources> Sources { get; set; }
+        public virtual DbSet<files> Files { get; set; }
+        public virtual DbSet<questions> Questions { get; set; }
+        public virtual DbSet<questions_answers> Questions_answers { get; set; }
+        public virtual DbSet<sources> Sources { get; set; }
+        public virtual DbSet<users> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

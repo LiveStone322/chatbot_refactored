@@ -62,7 +62,7 @@ namespace TelegramBotConsole
                 {
                     dbUser = new users()
                     {
-                        id = tlgrmUser.Id,
+                        id = tlgrmUser.Id.ToString(),
                         login = tlgrmUser.Username,
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
                     };
@@ -89,7 +89,7 @@ namespace TelegramBotConsole
                         content_hash = name,
                         directory = "test",
                         id_user = dbUser.id,
-                        file_name = DateTime.Now.ToString(),
+                        file_name = name,
                         file_format = "jpg",
                         id_source = 1
                     });

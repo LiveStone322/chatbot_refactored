@@ -11,7 +11,7 @@ namespace TelegramBotConsole
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public questions()
         {
-            biomarkers_values = new HashSet<questions_answers>();
+            questions_answers = new HashSet<questions_answers>();
         }
         public int id { get; set; }
 
@@ -20,9 +20,6 @@ namespace TelegramBotConsole
         public string name { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<questions_answers> biomarkers_values
-        {
-            get; set;
-        }
+        public virtual ICollection<questions_answers> questions_answers { get; set; }
     }
 }

@@ -1,13 +1,12 @@
-namespace GetContext
-{
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
-    using System.Data.Entity.Spatial;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-    [Table("public.files")]
-    public partial class files
+namespace WebApp
+{ 
+    [Table("files")]
+    class files
     {
         public int id { get; set; }
 
@@ -37,7 +36,6 @@ namespace GetContext
         public int id_source { get; set; }
 
         public virtual sources sources { get; set; }
-
         public virtual users users { get; set; }
     }
 }

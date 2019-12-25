@@ -11,14 +11,16 @@ namespace TelegramBotConsole
         public int id { get; set; }
 
         [Required]
-        [StringLength(40)]
+        [StringLength(8000)]
         public string content_hash { get; set; }
 
         [Required]
         [StringLength(8000)]
         public string directory { get; set; }
 
-        public int id_user { get; set; }
+        [Required]
+        [StringLength(8000)]
+        public string id_user { get; set; }
 
         [Required]
         [StringLength(255)]
