@@ -53,7 +53,7 @@ namespace TelegramBotConsole
             else if (txt == "загрузи файл")
             {
                 ea = EnumActivity.LoadFile;
-                
+                tag = -1;
                 
             }
             else if (dbUser.id_last_question != null)
@@ -77,8 +77,10 @@ namespace TelegramBotConsole
                 else id = df.last_quest.Value;
                 var next_quest = ctx.Questions.OrderBy(t => t.id).Where(t => t.id > id).FirstOrDefault(); //следующий
 
-                if (next_quest != null) 
+                if (next_quest != null)
+                {
                     return new Tuple<string, int>(ctx.Questions.Find(next_quest.id).name, next_quest.id);
+                }
             }
             else if (df.Activity == EnumActivity.Unknown) return new Tuple<string, int>("", -1);
             return new Tuple<string, int>("", -1);

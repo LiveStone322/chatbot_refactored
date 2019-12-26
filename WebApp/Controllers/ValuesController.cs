@@ -66,7 +66,7 @@ namespace WebApp.Controllers
                         id = viberUser.Id,
                         id_source = 2,
                         login = viberUser.Id,
-                        fio = viberUser.Name
+                        fio = viberUser.Name,
                     };
                     ctx.Users.Add(dbUser);
                     await ctx.SaveChangesAsync();
