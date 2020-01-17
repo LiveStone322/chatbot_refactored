@@ -29,9 +29,11 @@ namespace TelegramBotConsole
                 Console.WriteLine(
                   $"{viber.Name} работает."
                 );
-                
             }
             catch (Exception e) { Console.WriteLine("Ошибка при запуске Viber бота: " + e.Message); }
+            //viberBot.SetWebhookAsync("http://healthapp.my.to/api/values", new System.Collections.Generic.List<EventType>() {
+            //    EventType.Message
+            //});
 
             //telegram
             try
