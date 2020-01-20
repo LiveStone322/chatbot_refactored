@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TelegramBotConsole
+namespace WebApp
 {
     [Table("questions_answers")]
     class questions_answers

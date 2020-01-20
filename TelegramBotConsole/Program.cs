@@ -21,20 +21,6 @@ namespace TelegramBotConsole
             telegramBot = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
             viberBot = new ViberBotClient(AppInfo.ViberToken);
 
-
-            //viber
-            try
-            {
-                var viber = viberBot.GetAccountInfoAsync().Result;
-                Console.WriteLine(
-                  $"{viber.Name} работает."
-                );
-            }
-            catch (Exception e) { Console.WriteLine("Ошибка при запуске Viber бота: " + e.Message); }
-            //viberBot.SetWebhookAsync("http://healthapp.my.to/api/values", new System.Collections.Generic.List<EventType>() {
-            //    EventType.Message
-            //});
-
             //telegram
             try
             {
@@ -64,12 +50,12 @@ namespace TelegramBotConsole
                 {
                     dbUser = new users()
                     {
-                        id = tlgrmUser.Id,
+                        id = tlgrmUser.Id.ToString(),
                         login = tlgrmUser.Username,
+                        id_source = 1,
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
                     };
                     ctx.Users.Add(dbUser);
-                    await ctx.SaveChangesAsync();
                 }
 
                 //обработка сообщения (Dialogue state tracker)
@@ -78,7 +64,11 @@ namespace TelegramBotConsole
                 //доп. обработка
                 if (df.Activity == DialogueFrame.EnumActivity.Unknown) return;
                 if (df.Activity == DialogueFrame.EnumActivity.ReadMyBiomarkers)
+                {
                     dbUser.id_last_question = null;
+                    //обработка ответа (Dialogue manager)
+                    SendNextMessage(df, ctx, dbUser, e.Message.Chat);
+                }
 
                 if (df.Activity == DialogueFrame.EnumActivity.LoadFile)
                 {
@@ -91,7 +81,7 @@ namespace TelegramBotConsole
                         content_hash = name,
                         directory = "test",
                         id_user = dbUser.id,
-                        file_name = DateTime.Now.ToString(),
+                        file_name = name,
                         file_format = "jpg",
                         id_source = 1
                     });
@@ -100,8 +90,6 @@ namespace TelegramBotConsole
                           chatId: e.Message.Chat,
                           text: "Изображение сохранено"
                         );
-
-                    await ctx.SaveChangesAsync();
                 }
 
                 if (df.Activity == DialogueFrame.EnumActivity.Answer)
@@ -115,20 +103,25 @@ namespace TelegramBotConsole
                     });
 
                     //обработка ответа (Dialogue manager)
-                    var nextMessage = DialogueFrame.GetNextMessage(df, ctx);
-
-                    if (nextMessage.Item2 != -1)
-                    {
-                        dbUser.id_last_question = nextMessage.Item2;
-                        await telegramBot.SendTextMessageAsync(
-                          chatId: e.Message.Chat,
-                          text: ctx.Questions.Find(nextMessage.Item2).name
-                        );
-                    }
-                    else dbUser.id_last_question = null;
-                    await ctx.SaveChangesAsync();
+                    SendNextMessage(df, ctx, dbUser, e.Message.Chat);
                 }
+                await ctx.SaveChangesAsync();
             }
+        }
+
+        private static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, Telegram.Bot.Types.Chat chat)
+        {
+            var nextMessage = DialogueFrame.GetNextMessage(df, ctx);
+
+            if (nextMessage.Item2 != -1)
+            {
+                dbUser.id_last_question = nextMessage.Item2;
+                await telegramBot.SendTextMessageAsync(
+                  chatId: chat,
+                  text: ctx.Questions.Find(nextMessage.Item2).name
+                );
+            }
+            else dbUser.id_last_question = null;
         }
         private static async void DownloadFile(string fileId, string path)
         {

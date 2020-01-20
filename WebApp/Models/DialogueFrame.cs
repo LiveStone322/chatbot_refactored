@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Telegram.Bot;
-using Telegram.Bot.Types;
-using Telegram.Bot.Requests;
 using System.Linq;
+using Viber.Bot;
 
-namespace TelegramBotConsole
+namespace WebApp
 {
     class DialogueFrame
     {
@@ -29,22 +27,24 @@ namespace TelegramBotConsole
             Entity = "";
         }
 
-        public DialogueFrame(EnumActivity activity, string entity, int? last_q = null)
+        public DialogueFrame(EnumActivity activity, string entity = "", int? last_q = null)
         {
             Activity = activity;
             Entity = String.Copy(entity);
             last_quest = last_q;
         }
 
-        public static DialogueFrame GetDialogueFrame(Telegram.Bot.Args.MessageEventArgs e, HealthBotContext ctx, users dbUser)
+        public static DialogueFrame GetDialogueFrame(Viber.Bot.CallbackData e, HealthBotContext ctx, users dbUser)
         {
-
             EnumActivity ea;
             string ent = "";
             int? tag = null;
             string txt;
-            if (e.Message.Text == null) txt = e.Message.Caption.ToLower();
-            else txt = e.Message.Text.ToLower();
+            if (e.Message.Type == MessageType.Text)
+                txt = ((TextMessage)e.Message).Text;
+            else if (e.Message.Type == MessageType.Picture)
+                return new DialogueFrame(EnumActivity.LoadFile);//txt = ((PictureMessage)e.Message).Text;
+            else return new DialogueFrame(EnumActivity.Unknown);
 
             if (txt == "запиши мои показания")
             {
@@ -53,8 +53,8 @@ namespace TelegramBotConsole
             else if (txt == "загрузи файл")
             {
                 ea = EnumActivity.LoadFile;
-                tag = -1;
-                
+
+
             }
             else if (dbUser.id_last_question != null)
             {
@@ -77,10 +77,8 @@ namespace TelegramBotConsole
                 else id = df.last_quest.Value;
                 var next_quest = ctx.Questions.OrderBy(t => t.id).Where(t => t.id > id).FirstOrDefault(); //следующий
 
-                if (next_quest != null)
-                {
+                if (next_quest != null) 
                     return new Tuple<string, int>(ctx.Questions.Find(next_quest.id).name, next_quest.id);
-                }
             }
             else if (df.Activity == EnumActivity.Unknown) return new Tuple<string, int>("", -1);
             return new Tuple<string, int>("", -1);

@@ -32,6 +32,12 @@ namespace GetContext
                 .HasForeignKey(e => e.id_source)
                 .WillCascadeOnDelete(false);
 
+            modelBuilder.Entity<sources>()
+                .HasMany(e => e.users)
+                .WithRequired(e => e.sources)
+                .HasForeignKey(e => e.id_source)
+                .WillCascadeOnDelete(false);
+
             modelBuilder.Entity<users>()
                 .Property(e => e.phone_number)
                 .IsFixedLength();
