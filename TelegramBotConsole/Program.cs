@@ -61,16 +61,14 @@ namespace TelegramBotConsole
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(e, ctx, dbUser);
 
-                //доп. обработка
+                //внутренняя работа, обработка следующего сообщения (Dialogue manager)
                 if (df.Activity == DialogueFrame.EnumActivity.Unknown) return;
-                if (df.Activity == DialogueFrame.EnumActivity.ReadMyBiomarkers)
+                else if (df.Activity == DialogueFrame.EnumActivity.ReadMyBiomarkers)
                 {
                     dbUser.id_last_question = null;
-                    //обработка ответа (Dialogue manager)
-                    SendNextMessage(df, ctx, dbUser, e.Message.Chat);
+                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
                 }
-
-                if (df.Activity == DialogueFrame.EnumActivity.LoadFile)
+                else if (df.Activity == DialogueFrame.EnumActivity.LoadFile)
                 {
                     var path = Path.GetFullPath(@"..\..\");
 
@@ -86,43 +84,27 @@ namespace TelegramBotConsole
                         id_source = 1
                     });
 
-                    await telegramBot.SendTextMessageAsync(
-                          chatId: e.Message.Chat,
-                          text: "Изображение сохранено"
-                        );
-                }
 
-                if (df.Activity == DialogueFrame.EnumActivity.Answer)
+                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
+                }
+                else if (df.Activity == DialogueFrame.EnumActivity.Answer)
                 {
-                    if (df.last_quest == null) throw new Exception("Последнего вопроса не было");
                     await ctx.Questions_answers.AddAsync(new questions_answers
                     {
                         id_user = dbUser.id,
-                        id_question = df.last_quest.Value,
+                        id_question = df.Tag.Value,
                         value = df.Entity
                     });
 
                     //обработка ответа (Dialogue manager)
-                    SendNextMessage(df, ctx, dbUser, e.Message.Chat);
+                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
                 }
                 await ctx.SaveChangesAsync();
             }
         }
 
-        private static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, Telegram.Bot.Types.Chat chat)
-        {
-            var nextMessage = DialogueFrame.GetNextMessage(df, ctx);
+        
 
-            if (nextMessage.Item2 != -1)
-            {
-                dbUser.id_last_question = nextMessage.Item2;
-                await telegramBot.SendTextMessageAsync(
-                  chatId: chat,
-                  text: ctx.Questions.Find(nextMessage.Item2).name
-                );
-            }
-            else dbUser.id_last_question = null;
-        }
         private static async void DownloadFile(string fileId, string path)
         {
             try

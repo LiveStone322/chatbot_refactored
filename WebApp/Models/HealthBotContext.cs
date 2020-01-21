@@ -7,11 +7,11 @@ namespace WebApp
 {
     class HealthBotContext : DbContext
     {
-        public virtual DbSet<files> Files { get; set; }
-        public virtual DbSet<questions> Questions { get; set; }
-        public virtual DbSet<questions_answers> Questions_answers { get; set; }
-        public virtual DbSet<sources> Sources { get; set; }
-        public virtual DbSet<users> Users { get; set; }
+        public virtual DbSet<files> Files { get; set; } //файлы, которые нам присылает пользователь
+        public virtual DbSet<questions> Questions { get; set; } //набор вопросов
+        public virtual DbSet<questions_answers> Questions_answers { get; set; } //ответы на вопросы
+        public virtual DbSet<sources> Sources { get; set; } //
+        public virtual DbSet<users> Users { get; set; } //
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
