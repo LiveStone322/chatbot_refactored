@@ -14,13 +14,11 @@ namespace TelegramBotConsole
     class Program
     {
         static ITelegramBotClient telegramBot;
-        static IViberBotClient viberBot;
 
         static void Main()
         {
             telegramBot = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
-            viberBot = new ViberBotClient(AppInfo.ViberToken);
-
+            
             //telegram
             try
             {
@@ -30,6 +28,20 @@ namespace TelegramBotConsole
                 );
                 telegramBot.OnMessage += Bot_OnMessage;
                 telegramBot.StartReceiving();
+
+                //подключение к бд
+                using (var con = new Npgsql.NpgsqlConnection(new Npgsql.NpgsqlConnectionStringBuilder
+                {
+                    Host = AppInfo.DbHost,
+                    Port = AppInfo.DbPort,
+                    Username = AppInfo.DbLogin,
+                    Password = AppInfo.DbPassword,
+                    Database = AppInfo.DbName
+                }.ConnectionString)
+                )
+                {
+                    con.Open();
+                }
             }
             catch (Exception e) { Console.WriteLine("Ошибка при запуске Telegram бота: " + e.Message); }
 
@@ -61,49 +73,43 @@ namespace TelegramBotConsole
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(e, ctx, dbUser);
 
-                //внутренняя работа, обработка следующего сообщения (Dialogue manager)
-                if (df.Activity == DialogueFrame.EnumActivity.Unknown) return;
-                else if (df.Activity == DialogueFrame.EnumActivity.ReadMyBiomarkers)
+                //внутренняя работа
+                switch (df.Activity)
                 {
-                    dbUser.id_last_question = null;
-                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
-                }
-                else if (df.Activity == DialogueFrame.EnumActivity.LoadFile)
-                {
-                    var path = Path.GetFullPath(@"..\..\");
-
-                    var name = e.Message.Photo[e.Message.Photo.Length - 1].FileId;
-                    DownloadFile(name, path + name);
-                    ctx.Files.Add(new files
-                    {
-                        content_hash = name,
-                        directory = "test",
-                        id_user = dbUser.id,
-                        file_name = name,
-                        file_format = "jpg",
-                        id_source = 1
-                    });
-
-
-                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
-                }
-                else if (df.Activity == DialogueFrame.EnumActivity.Answer)
-                {
-                    await ctx.Questions_answers.AddAsync(new questions_answers
-                    {
-                        id_user = dbUser.id,
-                        id_question = df.Tag.Value,
-                        value = df.Entity
-                    });
-
-                    //обработка ответа (Dialogue manager)
-                    DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot, true);
+                    case DialogueFrame.EnumActivity.Answer:
+                        await ctx.Questions_answers.AddAsync(new questions_answers
+                        {
+                            id_user = dbUser.id,
+                            id_question = (int)df.Tag,
+                            value = df.Entity
+                        });
+                        break;
+                    case DialogueFrame.EnumActivity.LoadFile: 
+                        var path = Path.GetFullPath(@"..\..\");
+                        var name = e.Message.Photo[e.Message.Photo.Length - 1].FileId;
+                        DownloadFile(name, path + name);
+                        ctx.Files.Add(new files
+                        {
+                            content_hash = name,
+                            directory = "test",
+                            id_user = dbUser.id,
+                            file_name = name,
+                            file_format = "jpg",
+                            id_source = 1
+                        });
+                        break;
+                    case DialogueFrame.EnumActivity.ReadMyBiomarkers:
+                        dbUser.id_last_question = null;
+                        break;
+                    case DialogueFrame.EnumActivity.ConversationStart: break;
+                    case DialogueFrame.EnumActivity.Unknown: break;
                 }
                 await ctx.SaveChangesAsync();
+
+                //обработка следующего сообщения (Dialogue state manager)
+                DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot);
             }
         }
-
-        
 
         private static async void DownloadFile(string fileId, string path)
         {

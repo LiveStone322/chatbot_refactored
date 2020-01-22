@@ -11,9 +11,9 @@ namespace TelegramBotConsole
         public static string DbLogin { get; } = "postgres";
         public static string DbPassword { get; } = "123123123";
         public static string DbName { get; } = "health_bot";
-        public static string DbHost { get; } = "healthbot.cabaseg2bbj1.us-east-1.rds.amazonaws.com";
+        public static string DbHost { get; } = "healthbot.ckuwobxeqhcr.us-east-1.rds.amazonaws.com";
         public static int DbPort { get; } = 5432;
-        public static string Socks5Host { get; set; } = "45.76.89.184";    //хардкод - наше всё
-        public static int Socks5Port { get; set; } = 30406;
+        public static string Socks5Host { get; set; } = "79.143.180.10";    //хардкод - наше всё
+        public static int Socks5Port { get; set; } = 3834;
     }
 }
