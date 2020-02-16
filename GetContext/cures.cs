@@ -6,25 +6,26 @@ namespace GetContext
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
-    [Table("public.sources")]
-    public partial class sources
+    [Table("mis.cures")]
+    public partial class cures
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public sources()
+        public cures()
         {
-            files = new HashSet<files>();
-            users1 = new HashSet<users1>();
+            cures_in_conclusions = new HashSet<cures_in_conclusions>();
         }
 
         public int id { get; set; }
 
+        [Required]
         [StringLength(8000)]
         public string name { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<files> files { get; set; }
+        [Required]
+        [StringLength(8000)]
+        public string developer { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<users1> users1 { get; set; }
+        public virtual ICollection<cures_in_conclusions> cures_in_conclusions { get; set; }
     }
 }

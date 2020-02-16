@@ -1,61 +1,35 @@
 ﻿using System;
-using System.Threading;
-using Telegram.Bot;
-using Telegram.Bot.Args;
-using MihaZupan;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-using Viber.Bot;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
+using WebApp.Models;
+using MihaZupan;
 
-namespace TelegramBotConsole
+//dotnet publish -c Release -r linux-x64 --self-contained true
+namespace WebApp.Controllers
 {
-    class Program
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TelegramController : ControllerBase
     {
-        static ITelegramBotClient telegramBot;
-
-        static void Main()
-        {
-            telegramBot = new TelegramBotClient(AppInfo.TelegramToken, new HttpToSocks5Proxy("localhost", 8080));
-            
-            //telegram
-            try
-            {
-                var telegram = telegramBot.GetMeAsync().Result;
-                Console.WriteLine(
-                  $"{telegram.FirstName} работает."
-                );
-                telegramBot.OnMessage += Bot_OnMessage;
-                telegramBot.StartReceiving();
-
-                //подключение к бд
-                using (var con = new Npgsql.NpgsqlConnection(new Npgsql.NpgsqlConnectionStringBuilder
-                {
-                    Host = AppInfo.DbHost,
-                    Port = AppInfo.DbPort,
-                    Username = AppInfo.DbLogin,
-                    Password = AppInfo.DbPassword,
-                    Database = AppInfo.DbName
-                }.ConnectionString)
-                )
-                {
-                    con.Open();
-                }
-            }
-            catch (Exception e) { Console.WriteLine("Ошибка при запуске Telegram бота: " + e.Message); }
-
-            Thread.Sleep(int.MaxValue);
-        }
-
-        static async void Bot_OnMessage(object sender, MessageEventArgs e)
+        public async Task<StatusCodeResult> Post([FromBody]Update update)
         {
             DialogueFrame df;
-            Console.WriteLine($"Получил сообщение в чате {e.Message.Chat.Id}.");
+
+            if (update.Type != Telegram.Bot.Types.Enums.UpdateType.Message)
+                return Ok();
+
+            Console.WriteLine(update);
 
             using (var ctx = new HealthBotContext())
             {
-                var tlgrmUser = e.Message.From;
+                var tlgrmUser = update.Message.From;
                 var dbUser = ctx.Users.Where(t => t.login == tlgrmUser.Username).FirstOrDefault();
 
                 if (dbUser == null) //если пользователя нет
@@ -71,7 +45,7 @@ namespace TelegramBotConsole
                 }
 
                 //обработка сообщения (Dialogue state tracker)
-                df = DialogueFrame.GetDialogueFrame(e, ctx, dbUser);
+                df = DialogueFrame.GetDialogueFrame(update, ctx, dbUser);
 
                 //внутренняя работа
                 switch (df.Activity)
@@ -84,9 +58,9 @@ namespace TelegramBotConsole
                             value = df.Entity
                         });
                         break;
-                    case DialogueFrame.EnumActivity.LoadFile: 
+                    case DialogueFrame.EnumActivity.LoadFile:
                         var path = Path.GetFullPath(@"..\..\");
-                        var name = e.Message.Photo[e.Message.Photo.Length - 1].FileId;
+                        var name = update.Message.Photo[update.Message.Photo.Length - 1].FileId;
                         DownloadFile(name, path + name);
                         ctx.Files.Add(new files
                         {
@@ -107,18 +81,20 @@ namespace TelegramBotConsole
                 await ctx.SaveChangesAsync();
 
                 //обработка следующего сообщения (Dialogue state manager)
-                DialogueFrame.SendNextMessage(df, ctx, dbUser, e.Message.Chat, telegramBot);
+                DialogueFrame.SendNextMessage(df, ctx, dbUser, update.Message.Chat, Bots.telegramBot);
             }
+
+            return Ok();
         }
 
         private static async void DownloadFile(string fileId, string path)
         {
             try
             {
-                var file = await telegramBot.GetFileAsync(fileId);
+                var file = await Bots.telegramBot.GetFileAsync(fileId);
                 using (var stream = new FileStream(path, FileMode.Create))
                 {
-                    await telegramBot.DownloadFileAsync(file.FilePath, stream);
+                    await Bots.telegramBot.DownloadFileAsync(file.FilePath, stream);
                 }
             }
             catch (Exception ex)

@@ -6,39 +6,33 @@ namespace GetContext
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
-    [Table("public.users")]
+    [Table("mis.users")]
     public partial class users
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public users()
         {
-            files = new HashSet<files>();
-            questions_answers = new HashSet<questions_answers>();
+            conclusions = new HashSet<conclusions>();
         }
 
-        [StringLength(8000)]
-        public string id { get; set; }
-
-        [Required]
-        [StringLength(8000)]
-        public string login { get; set; }
+        public int id { get; set; }
 
         [StringLength(8000)]
-        public string fio { get; set; }
+        public string telegram_name { get; set; }
 
-        [StringLength(12)]
-        public string phone_number { get; set; }
+        [StringLength(8000)]
+        public string viber_name { get; set; }
 
-        public int? id_last_question { get; set; }
+        [StringLength(8000)]
+        public string phone { get; set; }
 
-        public int id_source { get; set; }
+        [StringLength(8000)]
+        public string name { get; set; }
+
+        [StringLength(8000)]
+        public string surname { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<files> files { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<questions_answers> questions_answers { get; set; }
-
-        public virtual sources sources { get; set; }
+        public virtual ICollection<conclusions> conclusions { get; set; }
     }
 }

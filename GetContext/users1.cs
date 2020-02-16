@@ -6,25 +6,39 @@ namespace GetContext
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
-    [Table("public.sources")]
-    public partial class sources
+    [Table("public.users")]
+    public partial class users1
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public sources()
+        public users1()
         {
             files = new HashSet<files>();
-            users1 = new HashSet<users1>();
+            questions_answers = new HashSet<questions_answers>();
         }
 
-        public int id { get; set; }
+        [StringLength(8000)]
+        public string id { get; set; }
+
+        [Required]
+        [StringLength(8000)]
+        public string login { get; set; }
 
         [StringLength(8000)]
-        public string name { get; set; }
+        public string fio { get; set; }
+
+        [StringLength(12)]
+        public string phone_number { get; set; }
+
+        public int? id_last_question { get; set; }
+
+        public int id_source { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<users1> users1 { get; set; }
+        public virtual ICollection<questions_answers> questions_answers { get; set; }
+
+        public virtual sources sources { get; set; }
     }
 }

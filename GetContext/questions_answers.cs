@@ -24,6 +24,6 @@ namespace GetContext
 
         public virtual questions questions { get; set; }
 
-        public virtual users users { get; set; }
+        public virtual users1 users1 { get; set; }
     }
 }

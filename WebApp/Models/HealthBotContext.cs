@@ -12,6 +12,7 @@ namespace WebApp
         public virtual DbSet<questions_answers> Questions_answers { get; set; } //ответы на вопросы
         public virtual DbSet<sources> Sources { get; set; } //
         public virtual DbSet<users> Users { get; set; } //
+        public virtual DbSet<notifications> notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

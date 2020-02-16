@@ -38,6 +38,6 @@ namespace GetContext
 
         public virtual sources sources { get; set; }
 
-        public virtual users users { get; set; }
+        public virtual users1 users1 { get; set; }
     }
 }
