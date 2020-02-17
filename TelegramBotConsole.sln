@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBotConsole", "Teleg
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GetContext", "GetContext\GetContext.csproj", "{67530F07-0666-49EC-8E3F-3DF295EC1469}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{23E8A3EB-A731-4BD1-9590-A36E461F4961}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApp", "WebApp\WebApp.csproj", "{23E8A3EB-A731-4BD1-9590-A36E461F4961}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
