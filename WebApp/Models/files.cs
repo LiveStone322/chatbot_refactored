@@ -18,9 +18,7 @@ namespace WebApp
         [StringLength(8000)]
         public string directory { get; set; }
 
-        [Required]
-        [StringLength(8000)]
-        public string id_user { get; set; }
+        public int id_user { get; set; }
 
         [Required]
         [StringLength(255)]
@@ -36,6 +34,7 @@ namespace WebApp
         public int id_source { get; set; }
 
         public virtual sources sources { get; set; }
+
         public virtual users users { get; set; }
     }
 }

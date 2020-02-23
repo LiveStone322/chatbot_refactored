@@ -13,7 +13,6 @@ namespace GetContext
         public sources()
         {
             files = new HashSet<files>();
-            users1 = new HashSet<users1>();
         }
 
         public int id { get; set; }
@@ -23,8 +22,5 @@ namespace GetContext
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<users1> users1 { get; set; }
     }
 }

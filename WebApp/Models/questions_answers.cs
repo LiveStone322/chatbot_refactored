@@ -11,11 +11,9 @@ namespace WebApp
     {
         public int id { get; set; }
 
-        [Required]
-        [StringLength(8000)]
-        public string id_user { get; set; }
+        public int id_user { get; set; }
 
-        public int id_question { get; set; } 
+        public int id_question { get; set; }
 
         [StringLength(8000)]
         public string value { get; set; }
@@ -23,6 +21,7 @@ namespace WebApp
         public DateTime date_time { get; set; }
 
         public virtual questions questions { get; set; }
+
         public virtual users users { get; set; }
     }
 }

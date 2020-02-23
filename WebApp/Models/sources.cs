@@ -12,7 +12,6 @@ namespace WebApp
         public sources()
         {
             files = new HashSet<files>();
-            users = new HashSet<users>();
         }
 
         public int id { get; set; }
@@ -22,8 +21,5 @@ namespace WebApp
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<users> users { get; set; }
     }
 }

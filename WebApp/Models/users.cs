@@ -12,18 +12,14 @@ namespace WebApp
         public users()
         {
             files = new HashSet<files>();
+            notifications = new HashSet<notifications>();
             questions_answers = new HashSet<questions_answers>();
         }
 
-        [StringLength(8000)]
-        public string id { get; set; }
+        public int id { get; set; }
 
-        [Required]
         [StringLength(8000)]
         public string loginTelegram { get; set; }
-
-        [StringLength(8000)]
-        public string loginViber { get; set; }
 
         [StringLength(8000)]
         public string fio { get; set; }
@@ -33,12 +29,16 @@ namespace WebApp
 
         public int? id_last_question { get; set; }
 
+        [StringLength(8000)]
+        public string loginViber { get; set; }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<questions_answers> questions_answers { get; set; }
+        public virtual ICollection<notifications> notifications { get; set; }
 
-        public virtual sources sources { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<questions_answers> questions_answers { get; set; }
     }
 }

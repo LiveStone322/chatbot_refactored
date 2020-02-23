@@ -20,5 +20,7 @@ namespace GetContext
         [Required]
         [StringLength(8000)]
         public string message { get; set; }
+
+        public virtual users users { get; set; }
     }
 }

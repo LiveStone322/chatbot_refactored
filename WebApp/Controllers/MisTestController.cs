@@ -30,7 +30,7 @@ namespace WebApp.Controllers
                                                         TelegramName = "LiveStoneArmy",
                                                         ViberName = "LiveStone",
                                                         Phone = "+79027916146",
-                                                        DateTime = GetNextMinuteFromNow(),
+                                                        DateTime = DateTime.Now,
                                                         Doctor = "Андреев А.А."
                                                     }
                                                 }));
@@ -47,7 +47,7 @@ namespace WebApp.Controllers
                                                         TelegramName = "LiveStoneArmy",
                                                         ViberName = "LiveStone",
                                                         Phone = "+79027916146",
-                                                        DateTime = GetNextMinuteFromNow(),
+                                                        DateTime = DateTime.Now,
                                                         Cures = new[] { "Лекарственин", "Лечебнин" },
                                                         Measures = new[] { "мг", "мл" },
                                                         Dozes = new[] { 300, 200 },
@@ -62,12 +62,6 @@ namespace WebApp.Controllers
             {
                 return "Ошибка: \n" + ex.Message + '\n' + ex.InnerException;
             }
-        }
-        
-        private static DateTime GetNextMinuteFromNow()
-        {
-            var now = DateTime.Now;
-            return new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute + 1, now.Second);
         }
     }
 }

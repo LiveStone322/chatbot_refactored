@@ -56,7 +56,7 @@ namespace WebApp.Controllers
                         {
                             id_user = FindUser(_update.UpdateMessage, ctx),
                             message = "Принимайте лекарства",
-                            on_time = _update.UpdateMessage.DateTime
+                            on_time = GetTime(_update.UpdateMessage.DateTime)
                         });
                         ctx.SaveChanges();
                     }
@@ -69,6 +69,12 @@ namespace WebApp.Controllers
             return Ok();
         }
 
+        private DateTime GetTime(DateTime dt)
+        {
+            return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute + 1, dt.Second);
+        }
+
+
         private string CreateNotificationText(UpdateAppointment message)
         {
             return "Вы записаны к доктору " + message.Doctor + " на " + message.DateTime.ToLongDateString() + ". Не опаздывайте";
@@ -77,9 +83,16 @@ namespace WebApp.Controllers
         private string FindUser(UpdateBase message, HealthBotContext ctx)
         {
             string id = null;
+            users user;
+            if (message.ViberName == null) message.ViberName = "";
+            if (message.TelegramName == null) message.TelegramName = "";
             if (message.ViberName.Length != 0 || message.TelegramName.Length != 0)
-                id = ctx.Users.FirstOrDefault(t => t.login == message.ViberName ||
-                                                            t.login == message.TelegramName).id;
+            {
+                user = ctx.Users.FirstOrDefault(t => t.loginViber == message.ViberName ||
+                                                            t.loginTelegram == message.TelegramName);
+                if (user != null) id = user.id;
+            }
+                .id;
             else
                 id = ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone).id;
 

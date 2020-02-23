@@ -11,8 +11,7 @@ namespace WebApp
     {
         public int id { get; set; }
 
-        [StringLength(8000)]
-        public string id_user { get; set; }
+        public int id_user { get; set; }
 
         public DateTime? on_time { get; set; }
 
@@ -21,5 +20,7 @@ namespace WebApp
         [Required]
         [StringLength(8000)]
         public string message { get; set; }
+
+        public virtual users users { get; set; }
     }
 }

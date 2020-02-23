@@ -78,11 +78,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="appointments.cs" />
-    <Compile Include="conclusions.cs" />
-    <Compile Include="cures.cs" />
-    <Compile Include="cures_in_conclusions.cs" />
-    <Compile Include="doctors.cs" />
     <Compile Include="files.cs" />
     <Compile Include="Model1.cs" />
     <Compile Include="notifications.cs" />
@@ -93,7 +88,6 @@
     <Compile Include="sources.cs" />
     <Compile Include="table_types.cs" />
     <Compile Include="users.cs" />
-    <Compile Include="users1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
