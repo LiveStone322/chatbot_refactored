@@ -30,15 +30,13 @@ namespace WebApp.Controllers
             using (var ctx = new HealthBotContext())
             {
                 var tlgrmUser = update.Message.From;
-                var dbUser = ctx.Users.Where(t => t.login == tlgrmUser.Username).FirstOrDefault();
+                var dbUser = ctx.Users.Where(t => t.loginTelegram == tlgrmUser.Username).FirstOrDefault();
 
                 if (dbUser == null) //если пользователя нет
                 {
                     dbUser = new users()
                     {
-                        id = tlgrmUser.Id.ToString(),
-                        login = tlgrmUser.Username,
-                        id_source = 1,
+                        loginTelegram = tlgrmUser.Username,
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
                     };
                     ctx.Users.Add(dbUser);

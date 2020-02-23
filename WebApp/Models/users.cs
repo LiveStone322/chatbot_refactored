@@ -20,7 +20,10 @@ namespace WebApp
 
         [Required]
         [StringLength(8000)]
-        public string login { get; set; }
+        public string loginTelegram { get; set; }
+
+        [StringLength(8000)]
+        public string loginViber { get; set; }
 
         [StringLength(8000)]
         public string fio { get; set; }
@@ -29,8 +32,6 @@ namespace WebApp
         public string phone_number { get; set; }
 
         public int? id_last_question { get; set; }
-
-        public int id_source { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }

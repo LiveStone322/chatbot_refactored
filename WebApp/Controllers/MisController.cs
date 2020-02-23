@@ -36,6 +36,7 @@ namespace WebApp.Controllers
                             message = CreateNotificationText(_update.UpdateMessage),
                             on_time = _update.UpdateMessage.DateTime
                         });
+                        ctx.SaveChanges();
                     }
                     catch(ArgumentNullException)
                     {
@@ -57,6 +58,7 @@ namespace WebApp.Controllers
                             message = "Принимайте лекарства",
                             on_time = _update.UpdateMessage.DateTime
                         });
+                        ctx.SaveChanges();
                     }
                     catch (ArgumentNullException)
                     {

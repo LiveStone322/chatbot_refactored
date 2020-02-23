@@ -56,16 +56,14 @@ namespace WebApp.Controllers
             using (var ctx = new HealthBotContext())
             {
                 var viberUser = callbackData.Sender;
-                var dbUser = ctx.Users.Where(t => t.login == viberUser.Id).FirstOrDefault(); //изменить БД
+                var dbUser = ctx.Users.Where(t => t.loginViber == viberUser.Id).FirstOrDefault(); //изменить БД
                 if (DEBUG) Console.WriteLine("В БД ЗАШЛО");
 
                 if (dbUser == null) //если пользователя нет
                 {
                     dbUser = new users()
                     {
-                        id = viberUser.Id,
-                        id_source = 2,
-                        login = viberUser.Id,
+                        loginViber = viberUser.Id,
                         fio = viberUser.Name,
                     };
                     ctx.Users.Add(dbUser);
