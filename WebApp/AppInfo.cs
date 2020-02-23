@@ -15,5 +15,6 @@ namespace WebApp
         public static int DbPort { get; } = 5432;
         public static string Socks5Host { get; set; } = "97.74.6.64";    //хардкод - наше всё
         public static int Socks5Port { get; set; } = 36671;
+        public static bool isDebugging { get; set; } = true;
     }
 }

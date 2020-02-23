@@ -18,7 +18,8 @@ namespace WebApp
             ReadMyBiomarkers,
             LoadFile,
             Answer,
-            ConversationStart
+            ConversationStart,
+            SecretMessage
         }
 
         public EnumActivity Activity { get; set; }  //действие пользователя, которое он от нас хочет
@@ -34,7 +35,7 @@ namespace WebApp
         public DialogueFrame(EnumActivity activity, string entity = "", object tag = null)
         {
             Activity = activity;
-            Entity = String.Copy(entity);
+            Entity = string.Copy(entity);
             Tag = tag;
         }
 
@@ -80,10 +81,14 @@ namespace WebApp
             {
                 ea = EnumActivity.ConversationStart;
             }
+            else if (txt == "секретное сообщение")
+            {
+                ea = EnumActivity.SecretMessage;
+            }
             else if (dbUser.id_last_question != null)
             {
                 ea = EnumActivity.Answer;
-                ent = String.Copy(txt);
+                ent = string.Copy(txt);
                 tag = FindNextQuestion(ctx, dbUser, dbUser.id_last_question.Value);
             }
             else ea = EnumActivity.Unknown;
@@ -104,7 +109,6 @@ namespace WebApp
         }
 
 
-        //Tuple: string - next message; int - next message id
         public static string GetNextMessage(DialogueFrame df, HealthBotContext ctx, ref string[] buttons)
         {
             string message = "";
@@ -119,6 +123,8 @@ namespace WebApp
                 message = "Изображение сохранено";
             else if (df.Activity == EnumActivity.ConversationStart)
                 message = "Хотите начать разговор?";
+            else if (df.Activity == EnumActivity.SecretMessage)
+                message = "Секретное сообщение принято";
 
             //список кнопок (желательно четное число кнопок)
             if (df.Activity == EnumActivity.ConversationStart)
@@ -169,6 +175,7 @@ namespace WebApp
 
             }
             else dbUser.id_last_question = null;
+            await ctx.SaveChangesAsync();
         }
 
         public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, CallbackData callbackData, IViberBotClient viberBot)
@@ -214,6 +221,7 @@ namespace WebApp
 
             }
             else dbUser.id_last_question = null;
+            await ctx.SaveChangesAsync();
         }
     }
 }

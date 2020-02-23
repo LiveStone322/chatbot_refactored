@@ -30,7 +30,7 @@ namespace WebApp.Controllers
                 {
                     try
                     {
-                        ctx.notifications.Add(new notifications()
+                        ctx.Notifications.Add(new notifications()
                         {
                             id_user = FindUser(_update.UpdateMessage, ctx),
                             message = CreateNotificationText(_update.UpdateMessage),
@@ -52,7 +52,7 @@ namespace WebApp.Controllers
 
                     try
                     {
-                        ctx.notifications.Add(new notifications()
+                        ctx.Notifications.Add(new notifications()
                         {
                             id_user = FindUser(_update.UpdateMessage, ctx),
                             message = "Принимайте лекарства",
@@ -80,9 +80,9 @@ namespace WebApp.Controllers
             return "Вы записаны к доктору " + message.Doctor + " на " + message.DateTime.ToLongDateString() + ". Не опаздывайте";
         }
 
-        private string FindUser(UpdateBase message, HealthBotContext ctx)
+        private int FindUser(UpdateBase message, HealthBotContext ctx)
         {
-            string id = null;
+            int? id = null;
             users user;
             if (message.ViberName == null) message.ViberName = "";
             if (message.TelegramName == null) message.TelegramName = "";
@@ -92,12 +92,14 @@ namespace WebApp.Controllers
                                                             t.loginTelegram == message.TelegramName);
                 if (user != null) id = user.id;
             }
-                .id;
             else
-                id = ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone).id;
+            {
+                user = ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone);
+                if (user != null) id = user.id;
+            }
 
-            if (id == null) throw new ArgumentNullException();
-            return id;
+            if (!id.HasValue) throw new ArgumentNullException();
+            else return id.Value;
         }
     }
 }
