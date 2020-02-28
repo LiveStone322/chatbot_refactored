@@ -109,7 +109,7 @@ namespace WebApp
         }
 
 
-        public static string GetNextMessage(DialogueFrame df, HealthBotContext ctx, ref string[] buttons)
+        public static string GetNextMessage(DialogueFrame df, users dbUser, HealthBotContext ctx, ref string[] buttons)
         {
             string message = "";
             if (df.Activity == EnumActivity.Answer || df.Activity == EnumActivity.ReadMyBiomarkers)
@@ -117,6 +117,7 @@ namespace WebApp
                 if (df.Tag != null)
                 {
                     message = ctx.Questions.Find(df.Tag).name;
+                    dbUser.id_last_question = (int?)df.Tag;
                 }
             }
             else if (df.Activity == EnumActivity.LoadFile)
@@ -144,12 +145,11 @@ namespace WebApp
 
             if (df.Activity == EnumActivity.Unknown) return;
 
-            message = GetNextMessage(df, ctx, ref buttons);
+            message = GetNextMessage(df, dbUser, ctx, ref buttons);
 
 
             if (message != "")
             {
-                dbUser.id_last_question = (int?)df.Tag;
                 if (buttons != null)
                 {
                     keyboard = new ReplyKeyboardMarkup
@@ -169,13 +169,13 @@ namespace WebApp
                 {
                     await client.SendTextMessageAsync(
                       chatId: chat,
-                      text: message
+                      text: message,
+                      replyMarkup: new ReplyKeyboardRemove()
                     );
                 }
 
             }
             else dbUser.id_last_question = null;
-            await ctx.SaveChangesAsync();
         }
 
         public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, CallbackData callbackData, IViberBotClient viberBot)
@@ -186,7 +186,7 @@ namespace WebApp
 
             if (df.Activity == EnumActivity.Unknown) return;
 
-            message = GetNextMessage(df, ctx, ref buttons);
+            message = GetNextMessage(df, dbUser, ctx, ref buttons);
 
 
             if (message != "")

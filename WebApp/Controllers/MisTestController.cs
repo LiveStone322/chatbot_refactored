@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using WebApp.Models;
+using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace WebApp.Controllers
 {
@@ -14,14 +16,48 @@ namespace WebApp.Controllers
     public class MisTestController : ControllerBase
     {
         [HttpGet]
-        public string Get([FromQuery]string type)
+        public async Task<string> GetAsync([FromQuery]string type)
         {
+            var idx = type.LastIndexOf('-');
+            string additional;
+            Update update = null;
+
+            if (idx != -1) additional = type.Substring(idx + 1);
+            else additional = null;
+
+            if (additional != null)
+                update = new Update()
+                {
+                    Id = 111,
+                    Message = new Message()
+                    {
+                        MessageId = 1,
+                        From = new User()
+                        {
+                            Id = 1111,
+                            FirstName = "Tester",
+                            LastName = "Testerov",
+                            Username = "@TestUser",
+                            IsBot = false
+                        },
+                        Text = additional,
+                        Chat = new Chat()
+                        {
+                            Id = 241186491,
+                            Username = "@TestUSer",
+                            Type = Telegram.Bot.Types.Enums.ChatType.Private,
+                            FirstName = "Tester"
+                        }
+                    }
+                };
+
+            type = type.Substring(0, idx);
             try
             {
-
-                if (type == "appointment")
+                switch (type)
                 {
-                    new MisController().Post(JsonConvert.SerializeObject(
+                    case "appointment":
+                        new MisController().Post(JsonConvert.SerializeObject(
                                                 new MisUpdate<UpdateAppointment>()
                                                 {
                                                     Update = UpdateType.Appointment,
@@ -34,11 +70,9 @@ namespace WebApp.Controllers
                                                         Doctor = "Андреев А.А."
                                                     }
                                                 }));
-                    return "Отправлена запись";
-                }
-                else
-                {
-                    new MisController().Post(JsonConvert.SerializeObject(
+                        return "Отправлена запись";
+                    case "conclusion":
+                        new MisController().Post(JsonConvert.SerializeObject(
                                                 new MisUpdate<UpdateConclusion>()
                                                 {
                                                     Update = UpdateType.Conclusion,
@@ -53,9 +87,17 @@ namespace WebApp.Controllers
                                                         Dozes = new[] { 300, 200 },
                                                         Times = new[] { 1, 2 },
                                                         Periods = new[] { "день", "день" } //другие варианты пока не реализованы
-                                                }
+                                                    }
                                                 }));
-                    return "Отправлено заключение";
+                        return "Отправлено заключение";
+                    case "telegram":
+                        if (update != null)
+                        {
+                            await new TelegramController().Post(update);
+                            return "Отправлено: " + additional;
+                        }
+                        else return "update было равно null. Правильно ли вы отправили запрос: " + type + " : "+ additional + "?";
+                    default: return "type is appointment, conclusion or telegram";
                 }
             }
             catch(Exception ex)

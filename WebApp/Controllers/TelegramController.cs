@@ -52,7 +52,7 @@ namespace WebApp.Controllers
                         await ctx.Questions_answers.AddAsync(new questions_answers
                         {
                             id_user = dbUser.id,
-                            id_question = (int)df.Tag,
+                            id_question = dbUser.id_last_question.Value,
                             value = df.Entity
                         });
                         break;
@@ -76,10 +76,10 @@ namespace WebApp.Controllers
                     case DialogueFrame.EnumActivity.ConversationStart: break;
                     case DialogueFrame.EnumActivity.Unknown: break;
                 }
-                await ctx.SaveChangesAsync();
 
                 //обработка следующего сообщения (Dialogue state manager)
                 DialogueFrame.SendNextMessage(df, ctx, dbUser, update.Message.Chat, Bots.telegramBot);
+                await ctx.SaveChangesAsync();
             }
 
             return Ok();

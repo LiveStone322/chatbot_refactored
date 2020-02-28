@@ -13,8 +13,8 @@ namespace WebApp
         public static string DbName { get; } = "health_bot";
         public static string DbHost { get; } = "healthbot.ckuwobxeqhcr.us-east-1.rds.amazonaws.com";
         public static int DbPort { get; } = 5432;
-        public static string Socks5Host { get; set; } = "97.74.6.64";    //хардкод - наше всё
-        public static int Socks5Port { get; set; } = 36671;
+        public static string Socks5Host { get; set; } = "127.0.0.1";    //хардкод - наше всё
+        public static int Socks5Port { get; set; } = 8080;
         public static bool isDebugging { get; set; } = true;
     }
 }
