@@ -221,7 +221,6 @@ namespace WebApp
 
             }
             else dbUser.id_last_question = null;
-            await ctx.SaveChangesAsync();
         }
     }
 }

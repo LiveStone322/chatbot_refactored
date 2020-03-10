@@ -70,7 +70,6 @@ namespace WebApp.Controllers
                         fio = viberUser.Name,
                     };
                     ctx.Users.Add(dbUser);
-                    await ctx.SaveChangesAsync();
                 }
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(callbackData, ctx, dbUser);
@@ -91,11 +90,11 @@ namespace WebApp.Controllers
                         break; //доделать
                     case DialogueFrame.EnumActivity.Answer:
                         if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.Answer");
-                        if (AppInfo.isDebugging) Console.WriteLine($"ID: {dbUser.id} ID_QUESTION: {(int)df.Tag} VALUE: {df.Entity}");
+                        //if (AppInfo.isDebugging) Console.WriteLine($"ID: {dbUser.id} ID_QUESTION: {(int)df.Tag} VALUE: {df.Entity}");
                         await ctx.Questions_answers.AddAsync(new questions_answers
                         {
                             id_user = dbUser.id,
-                            id_question = (int)df.Tag,
+                            id_question = dbUser.id_last_question.Value,
                             value = df.Entity
                         });
                         break;
@@ -144,11 +143,11 @@ namespace WebApp.Controllers
                         }
                 }
 
-                await ctx.SaveChangesAsync();
 
 
                 //обработка следующего сообщения (Dialogue state manager)
                 DialogueFrame.SendNextMessage(df, ctx, dbUser, callbackData, Bots.viberBot);
+                await ctx.SaveChangesAsync();
             }
             return Ok();
         }

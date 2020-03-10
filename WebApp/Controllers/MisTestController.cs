@@ -15,6 +15,8 @@ namespace WebApp.Controllers
     [ApiController]
     public class MisTestController : ControllerBase
     {
+        //telegram-Сообщение
+        //
         [HttpGet]
         public async Task<string> GetAsync([FromQuery]string type)
         {
