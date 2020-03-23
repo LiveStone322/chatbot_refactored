@@ -10,6 +10,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using WebApp.Models;
 using MihaZupan;
+using Newtonsoft.Json;
 
 //dotnet publish -c Release -r linux-x64 --self-contained true
 namespace WebApp.Controllers
@@ -18,9 +19,14 @@ namespace WebApp.Controllers
     [ApiController]
     public class TelegramController : ControllerBase
     {
-        public async Task<StatusCodeResult> Post([FromBody]Update update)
+        public async Task<StatusCodeResult> Post()
         {
             DialogueFrame df;
+            string body;
+            using (var reader = new StreamReader(Request.Body))
+                body = await reader.ReadToEndAsync();
+
+            var update =  JsonConvert.DeserializeObject<Update>(body);
 
             if (update.Type != Telegram.Bot.Types.Enums.UpdateType.Message)
                 return Ok();

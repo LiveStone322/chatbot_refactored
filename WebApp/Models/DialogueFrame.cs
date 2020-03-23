@@ -7,6 +7,7 @@ using Viber.Bot;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using System.Text.RegularExpressions;
 
 namespace WebApp
 {
@@ -56,7 +57,7 @@ namespace WebApp
         public static DialogueFrame GetDialogueFrame(Update e, HealthBotContext ctx, users dbUser)
         {
             string txt;
-            if (e.Message.Text == null) txt = e.Message.Caption.ToLower();
+            if (e.Message.Text == null) txt = e.Message.Caption.ToLower();  //лучше смотреть тип сообщения
             else txt = e.Message.Text.ToLower();
             return AnylizeMessage(txt, ctx, dbUser);
         }
@@ -87,13 +88,37 @@ namespace WebApp
             }
             else if (dbUser.id_last_question != null)
             {
-                ea = EnumActivity.Answer;
-                ent = string.Copy(txt);
-                tag = FindNextQuestion(ctx, dbUser, dbUser.id_last_question.Value);
+                var question = ctx.Questions.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
+                if (question != null)
+                    ent = ParseAnswer(txt, question.format, question.splitter);
+                if (ent != "")
+                {
+                    ea = EnumActivity.Answer;
+                    tag = FindNextQuestion(ctx, dbUser, dbUser.id_last_question.Value);
+                }
+                else
+                {
+                    ea = EnumActivity.Unknown;
+                    ent = "Ошибка при вводе показателя. Убедитесь, что Вы ввели все правильно"; 
+                };
             }
             else ea = EnumActivity.Unknown;
 
             return new DialogueFrame(ea, ent, tag);
+        }
+
+        private static string ParseAnswer(string txt, string format, string splitter)
+        {
+            var match = Regex.Match(txt, format);
+            string result = "";
+            if (match.Groups.Count > 1)
+            {
+                for (int i = 1; i<match.Groups.Count; i++)
+                    result += match.Groups[i] + splitter;
+                result = result.Substring(0, result.Length - splitter.Length);  //можно было бы сделать через While
+            }
+            else result = match.Value;
+            return result;
         }
 
         //следующий вопрос
@@ -143,39 +168,40 @@ namespace WebApp
             ReplyKeyboardMarkup keyboard;
             string[] buttons = null;
 
-            if (df.Activity == EnumActivity.Unknown) return;
-
-            message = GetNextMessage(df, dbUser, ctx, ref buttons);
-
-
-            if (message != "")
+            if (df.Activity == EnumActivity.Unknown)
+                if (df.Entity != "") message = df.Entity;
+                else return;
+            else
             {
-                if (buttons != null)
+                message = GetNextMessage(df, dbUser, ctx, ref buttons);
+                if (message != "")
                 {
-                    keyboard = new ReplyKeyboardMarkup
+                    if (buttons != null)
                     {
-                        Keyboard = new[] {
+                        keyboard = new ReplyKeyboardMarkup
+                        {
+                            Keyboard = new[] {
                             buttons.Select(t => new Telegram.Bot.Types.ReplyMarkups.KeyboardButton(t))
                         },
-                        ResizeKeyboard = true
-                    };
-                    await client.SendTextMessageAsync(
-                      chatId: chat,
-                      text: message,
-                      replyMarkup: keyboard
-                    );
+                            ResizeKeyboard = true
+                        };
+                        await client.SendTextMessageAsync(
+                          chatId: chat,
+                          text: message,
+                          replyMarkup: keyboard
+                        );
+                    }
+                    else
+                    {
+                        await client.SendTextMessageAsync(
+                          chatId: chat,
+                          text: message,
+                          replyMarkup: new ReplyKeyboardRemove()
+                        );
+                    }
                 }
-                else
-                {
-                    await client.SendTextMessageAsync(
-                      chatId: chat,
-                      text: message,
-                      replyMarkup: new ReplyKeyboardRemove()
-                    );
-                }
-
+                else dbUser.id_last_question = null;
             }
-            else dbUser.id_last_question = null;
         }
 
         public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, CallbackData callbackData, IViberBotClient viberBot)
@@ -184,43 +210,45 @@ namespace WebApp
             Keyboard keyboard;
             string[] buttons = null;
 
-            if (df.Activity == EnumActivity.Unknown) return;
-
-            message = GetNextMessage(df, dbUser, ctx, ref buttons);
-
-
-            if (message != "")
+            if (df.Activity == EnumActivity.Unknown)
+                if (df.Entity != "") message = df.Entity;
+                else return;
+            else
             {
-                dbUser.id_last_question = (int?)df.Tag;
-                if (buttons != null)
+                message = GetNextMessage(df, dbUser, ctx, ref buttons);
+                if (message != "")
                 {
-                    keyboard = new Keyboard()
+                    dbUser.id_last_question = (int?)df.Tag;
+                    if (buttons != null)
                     {
-                        BackgroundColor = "#32C832",
-                        Buttons = buttons.Select(t => new Viber.Bot.KeyboardButton() { Text = t }).ToList()
-                    };
-                    await viberBot.SendKeyboardMessageAsync(new KeyboardMessage
+                        keyboard = new Keyboard()
+                        {
+                            BackgroundColor = "#32C832",
+                            Buttons = buttons.Select(t => new Viber.Bot.KeyboardButton() { Text = t }).ToList()
+                        };
+                        await viberBot.SendKeyboardMessageAsync(new KeyboardMessage
+                        {
+                            Text = message,
+                            Keyboard = keyboard,
+                            Receiver = callbackData.Sender.Id,
+                            MinApiVersion = callbackData.Message.MinApiVersion,
+                            TrackingData = callbackData.Message.TrackingData
+                        });
+                    }
+                    else
                     {
-                        Text = message,
-                        Keyboard = keyboard,
-                        Receiver = callbackData.Sender.Id,
-                        MinApiVersion = callbackData.Message.MinApiVersion,
-                        TrackingData = callbackData.Message.TrackingData
-                    });
-                }
-                else
-                {
-                    await viberBot.SendTextMessageAsync(new TextMessage()
-                    {
-                        Text = message,
-                        Receiver = callbackData.Sender.Id,
-                        MinApiVersion = callbackData.Message.MinApiVersion,
-                        TrackingData = callbackData.Message.TrackingData
-                    });
-                }
+                        await viberBot.SendTextMessageAsync(new TextMessage()
+                        {
+                            Text = message,
+                            Receiver = callbackData.Sender.Id,
+                            MinApiVersion = callbackData.Message.MinApiVersion,
+                            TrackingData = callbackData.Message.TrackingData
+                        });
+                    }
 
+                }
+                else dbUser.id_last_question = null;
             }
-            else dbUser.id_last_question = null;
         }
     }
 }

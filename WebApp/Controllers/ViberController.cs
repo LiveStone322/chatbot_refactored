@@ -8,9 +8,6 @@ using System.Threading.Tasks;
 using Viber.Bot;
 using WebApp.Models;
 
-/// <summary>
-/// TODO: где-то контекст переиспользуется????
-/// </summary>
 namespace WebApp.Controllers
 {
     [Route("api/[controller]")]

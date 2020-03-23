@@ -95,8 +95,8 @@ namespace WebApp.Controllers
                     case "telegram":
                         if (update != null)
                         {
-                            await new TelegramController().Post(update);
-                            return "Отправлено: " + additional;
+                            //await new TelegramController().Post(JsonConvert.SerializeObject(update));
+                            return "не Отправлено: " + additional + " \n дананя функция сейчас заблокирована";
                         }
                         else return "update было равно null. Правильно ли вы отправили запрос: " + type + " : "+ additional + "?";
                     default: return "type is appointment, conclusion or telegram";
