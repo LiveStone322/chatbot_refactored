@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WebApp.Models;
+using Telegram.Bot;
 
 namespace WebApp.Controllers
 {
@@ -30,13 +31,16 @@ namespace WebApp.Controllers
                 {
                     try
                     {
+                        var dbUser = FindUser(_update.UpdateMessage, ctx);
                         ctx.Notifications.Add(new notifications()
                         {
-                            id_user = FindUser(_update.UpdateMessage, ctx),
+                            id_user = dbUser.id,
                             message = CreateNotificationText(_update.UpdateMessage),
                             on_time = _update.UpdateMessage.DateTime
                         });
                         ctx.SaveChanges();
+                        Bots.telegramBot.SendTextMessageAsync(dbUser.telegram_chat_id, "Вы записаны на прием к "
+                                                                + _update.UpdateMessage.Doctor);
                     }
                     catch(ArgumentNullException)
                     {
@@ -52,13 +56,15 @@ namespace WebApp.Controllers
 
                     try
                     {
+                        var dbUser = FindUser(_update.UpdateMessage, ctx);
                         ctx.Notifications.Add(new notifications()
                         {
-                            id_user = FindUser(_update.UpdateMessage, ctx),
+                            id_user = dbUser.id,
                             message = "Принимайте лекарства",
                             on_time = GetTime(_update.UpdateMessage.DateTime)
                         });
                         ctx.SaveChanges();
+
                     }
                     catch (ArgumentNullException)
                     {
@@ -80,26 +86,19 @@ namespace WebApp.Controllers
             return "Вы записаны к доктору " + message.Doctor + " на " + message.DateTime.ToLongDateString() + ". Не опаздывайте";
         }
 
-        private int FindUser(UpdateBase message, HealthBotContext ctx)
+        private users FindUser(UpdateBase message, HealthBotContext ctx)
         {
-            int? id = null;
-            users user;
             if (message.ViberName == null) message.ViberName = "";
             if (message.TelegramName == null) message.TelegramName = "";
             if (message.ViberName.Length != 0 || message.TelegramName.Length != 0)
             {
-                user = ctx.Users.FirstOrDefault(t => t.loginViber == message.ViberName ||
+                return ctx.Users.FirstOrDefault(t => t.loginViber == message.ViberName ||
                                                             t.loginTelegram == message.TelegramName);
-                if (user != null) id = user.id;
             }
             else
             {
-                user = ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone);
-                if (user != null) id = user.id;
+                return ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone);
             }
-
-            if (!id.HasValue) throw new ArgumentNullException();
-            else return id.Value;
         }
     }
 }

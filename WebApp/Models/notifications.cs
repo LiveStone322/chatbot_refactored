@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace WebApp
 {
 
-    [Table("public.notifications")]
+    [Table("notifications")]
     class notifications
     {
         public int id { get; set; }

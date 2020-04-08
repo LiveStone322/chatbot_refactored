@@ -20,7 +20,8 @@ namespace WebApp
             LoadFile,
             Answer,
             ConversationStart,
-            SecretMessage
+            SecretMessage,
+            ConversationStartAnswer
         }
 
         public EnumActivity Activity { get; set; }  //действие пользователя, которое он от нас хочет
@@ -77,6 +78,10 @@ namespace WebApp
             {
                 ea = EnumActivity.LoadFile;
                 //доп контекст не нужен?
+            }
+            else if (txt == "да" || txt == "нет")
+            {
+                ea = EnumActivity.ConversationStartAnswer;
             }
             else if (txt == "/start")
             {
@@ -149,6 +154,8 @@ namespace WebApp
                 message = "Изображение сохранено";
             else if (df.Activity == EnumActivity.ConversationStart)
                 message = "Хотите начать разговор?";
+            else if (df.Activity == EnumActivity.ConversationStartAnswer)
+                message = "Здравствуйте!\nДля записи показаний отправьте мне \"запиши мои показания\"";
             else if (df.Activity == EnumActivity.SecretMessage)
                 message = "Секретное сообщение принято";
 

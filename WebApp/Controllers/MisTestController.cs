@@ -53,7 +53,7 @@ namespace WebApp.Controllers
                     }
                 };
 
-            type = type.Substring(0, idx);
+            if (idx != -1) type = type.Substring(0, idx); 
             try
             {
                 switch (type)

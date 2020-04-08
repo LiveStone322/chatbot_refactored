@@ -32,6 +32,8 @@ namespace WebApp
         [StringLength(8000)]
         public string loginViber { get; set; }
 
+        public long? telegram_chat_id { get; set; }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<files> files { get; set; }
 

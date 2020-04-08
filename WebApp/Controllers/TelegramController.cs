@@ -9,7 +9,6 @@ using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
 using WebApp.Models;
-using MihaZupan;
 using Newtonsoft.Json;
 
 //dotnet publish -c Release -r linux-x64 --self-contained true
@@ -42,8 +41,10 @@ namespace WebApp.Controllers
                 {
                     dbUser = new users()
                     {
+
                         loginTelegram = tlgrmUser.Username,
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
+                        telegram_chat_id = update.Message.Chat.Id
                     };
                     ctx.Users.Add(dbUser);
                 }
