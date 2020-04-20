@@ -35,7 +35,7 @@ namespace WebApp.Controllers
             using (var ctx = new HealthBotContext())
             {
                 var tlgrmUser = update.Message.From;
-                var dbUser = ctx.Users.Where(t => t.loginTelegram == tlgrmUser.Username).FirstOrDefault();
+                var dbUser = ctx.users.Where(t => t.loginTelegram == tlgrmUser.Username).FirstOrDefault();
 
                 if (dbUser == null) //если пользователя нет
                 {
@@ -46,17 +46,17 @@ namespace WebApp.Controllers
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
                         telegram_chat_id = update.Message.Chat.Id
                     };
-                    ctx.Users.Add(dbUser);
+                    ctx.users.Add(dbUser);
                 }
 
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(update, ctx, dbUser);
 
-                //внутренняя работа
+                //внутренняя работа в рамках платформы
                 switch (df.Activity)
                 {
                     case DialogueFrame.EnumActivity.Answer:
-                        await ctx.Questions_answers.AddAsync(new questions_answers
+                        await ctx.questions_answers.AddAsync(new questions_answers
                         {
                             id_user = dbUser.id,
                             id_question = dbUser.id_last_question.Value,
@@ -67,7 +67,7 @@ namespace WebApp.Controllers
                         var path = Path.GetFullPath(@"..\..\");
                         var name = update.Message.Photo[update.Message.Photo.Length - 1].FileId;
                         DownloadFile(name, path + name);
-                        ctx.Files.Add(new files
+                        ctx.files.Add(new files
                         {
                             content_hash = name,
                             directory = "test",

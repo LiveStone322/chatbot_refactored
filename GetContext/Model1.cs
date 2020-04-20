@@ -8,25 +8,38 @@ namespace GetContext
     public partial class Model1 : DbContext
     {
         public Model1()
-            : base("name=Model13")
+            : base("name=Model14")
         {
         }
 
+        public virtual DbSet<biomarks> biomarks { get; set; }
         public virtual DbSet<files> files { get; set; }
         public virtual DbSet<notifications> notifications { get; set; }
         public virtual DbSet<questions> questions { get; set; }
         public virtual DbSet<questions_answers> questions_answers { get; set; }
         public virtual DbSet<sources> sources { get; set; }
+        public virtual DbSet<system_messages> system_messages { get; set; }
         public virtual DbSet<table_types> table_types { get; set; }
         public virtual DbSet<users> users { get; set; }
+        public virtual DbSet<users_biomarks> users_biomarks { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<questions>()
+            modelBuilder.Entity<biomarks>()
+                .HasMany(e => e.questions)
+                .WithOptional(e => e.biomarks)
+                .HasForeignKey(e => e.id_biomark);
+
+            modelBuilder.Entity<biomarks>()
                 .HasMany(e => e.questions_answers)
-                .WithRequired(e => e.questions)
+                .WithRequired(e => e.biomarks)
                 .HasForeignKey(e => e.id_question)
                 .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<biomarks>()
+                .HasMany(e => e.users_biomarks)
+                .WithOptional(e => e.biomarks)
+                .HasForeignKey(e => e.id_biomark);
 
             modelBuilder.Entity<sources>()
                 .HasMany(e => e.files)
@@ -55,6 +68,10 @@ namespace GetContext
                 .WithRequired(e => e.users)
                 .HasForeignKey(e => e.id_user)
                 .WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<users>()
+                .HasOptional(e => e.users_biomarks)
+                .WithRequired(e => e.users);
         }
     }
 }

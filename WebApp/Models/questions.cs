@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -8,25 +9,18 @@ namespace WebApp
     [Table("questions")]
     class questions
     {
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public questions()
-        {
-            questions_answers = new HashSet<questions_answers>();
-        }
-
         public int id { get; set; }
 
-        [Required]
-        [StringLength(8000)]
-        public string name { get; set; }
+        public bool is_biomark { get; set; }
 
         [StringLength(8000)]
-        public string format { get; set; }
+        public string question { get; set; }
+
+        public int? id_biomark { get; set; }
 
         [StringLength(8000)]
-        public string splitter { get; set; }
+        public string info { get; set; }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<questions_answers> questions_answers { get; set; }
+        public virtual biomarks biomarks { get; set; }
     }
 }

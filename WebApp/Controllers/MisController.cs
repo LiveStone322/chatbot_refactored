@@ -32,7 +32,7 @@ namespace WebApp.Controllers
                     try
                     {
                         var dbUser = FindUser(_update.UpdateMessage, ctx);
-                        ctx.Notifications.Add(new notifications()
+                        ctx.notifications.Add(new notifications()
                         {
                             id_user = dbUser.id,
                             message = CreateNotificationText(_update.UpdateMessage),
@@ -57,7 +57,7 @@ namespace WebApp.Controllers
                     try
                     {
                         var dbUser = FindUser(_update.UpdateMessage, ctx);
-                        ctx.Notifications.Add(new notifications()
+                        ctx.notifications.Add(new notifications()
                         {
                             id_user = dbUser.id,
                             message = "Принимайте лекарства",
@@ -92,12 +92,12 @@ namespace WebApp.Controllers
             if (message.TelegramName == null) message.TelegramName = "";
             if (message.ViberName.Length != 0 || message.TelegramName.Length != 0)
             {
-                return ctx.Users.FirstOrDefault(t => t.loginViber == message.ViberName ||
+                return ctx.users.FirstOrDefault(t => t.loginViber == message.ViberName ||
                                                             t.loginTelegram == message.TelegramName);
             }
             else
             {
-                return ctx.Users.FirstOrDefault(t => t.phone_number == message.Phone);
+                return ctx.users.FirstOrDefault(t => t.phone_number == message.Phone);
             }
         }
     }

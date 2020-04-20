@@ -12,6 +12,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.1.2" />
     <PackageReference Include="Telegram.Bot" Version="15.3.0" />
     <PackageReference Include="viber.bot" Version="1.0.1" />
+    <PackageReference Include="ZulipAPI" Version="0.2.1" />
   </ItemGroup>
 
 </Project>

@@ -6,21 +6,17 @@ namespace GetContext
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
-    [Table("public.questions")]
-    public partial class questions
+    [Table("public.users_biomarks")]
+    public partial class users_biomarks
     {
-        public int id { get; set; }
-
-        public bool is_biomark { get; set; }
-
-        [StringLength(8000)]
-        public string question { get; set; }
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int id_user { get; set; }
 
         public int? id_biomark { get; set; }
 
-        [StringLength(8000)]
-        public string info { get; set; }
-
         public virtual biomarks biomarks { get; set; }
+
+        public virtual users users { get; set; }
     }
 }

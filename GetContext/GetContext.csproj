@@ -78,6 +78,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="biomarks.cs" />
     <Compile Include="files.cs" />
     <Compile Include="Model1.cs" />
     <Compile Include="notifications.cs" />
@@ -86,8 +87,10 @@
     <Compile Include="questions.cs" />
     <Compile Include="questions_answers.cs" />
     <Compile Include="sources.cs" />
+    <Compile Include="system_messages.cs" />
     <Compile Include="table_types.cs" />
     <Compile Include="users.cs" />
+    <Compile Include="users_biomarks.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

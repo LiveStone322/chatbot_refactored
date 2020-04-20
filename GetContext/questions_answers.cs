@@ -20,7 +20,7 @@ namespace GetContext
 
         public DateTime date_time { get; set; }
 
-        public virtual questions questions { get; set; }
+        public virtual biomarks biomarks { get; set; }
 
         public virtual users users { get; set; }
     }

@@ -7,16 +7,19 @@ namespace WebApp
 {
     class HealthBotContext : DbContext
     {
-        public virtual DbSet<files> Files { get; set; }
-        public virtual DbSet<notifications> Notifications { get; set; }
-        public virtual DbSet<questions> Questions { get; set; }
-        public virtual DbSet<questions_answers> Questions_answers { get; set; }
-        public virtual DbSet<sources> Sources { get; set; }
-        public virtual DbSet<users> Users { get; set; }
+        public virtual DbSet<biomarks> biomarks { get; set; }
+        public virtual DbSet<files> files { get; set; }
+        public virtual DbSet<notifications> notifications { get; set; }
+        public virtual DbSet<questions> questions { get; set; }
+        public virtual DbSet<questions_answers> questions_answers { get; set; }
+        public virtual DbSet<sources> sources { get; set; }
+        public virtual DbSet<system_messages> system_messages { get; set; }
+        public virtual DbSet<users> users { get; set; }
+        public virtual DbSet<users_biomarks> users_biomarks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<questions>()
+            modelBuilder.Entity<biomarks>()
                 .HasMany(e => e.questions_answers)
                 .WithOne(e => e.questions)
                 .HasForeignKey(e => e.id_question)

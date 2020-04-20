@@ -8,6 +8,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Text.RegularExpressions;
+using ZulipAPI;
 
 namespace WebApp
 {
@@ -21,7 +22,9 @@ namespace WebApp
             Answer,
             ConversationStart,
             SecretMessage,
-            ConversationStartAnswer
+            ConversationStartAnswer,
+            GetPlot,
+            ConnectToMobileApp
         }
 
         public EnumActivity Activity { get; set; }  //действие пользователя, которое он от нас хочет
@@ -30,6 +33,7 @@ namespace WebApp
 
         public DialogueFrame()
         {
+            var client =
             Activity = EnumActivity.Unknown;
             Entity = "";
         }
@@ -79,7 +83,7 @@ namespace WebApp
                 ea = EnumActivity.LoadFile;
                 //доп контекст не нужен?
             }
-            else if (txt == "да" || txt == "нет")
+            else if ((txt == "да" || txt == "нет") && dbUser.id_last_question == null)
             {
                 ea = EnumActivity.ConversationStartAnswer;
             }
@@ -87,13 +91,21 @@ namespace WebApp
             {
                 ea = EnumActivity.ConversationStart;
             }
+            else if (txt == "покажи мне график")
+            {
+                ea = EnumActivity.GetPlot;
+            }
+            else if (txt == "синхронизируй с приложением")
+            {
+                ea = EnumActivity.ConnectToMobileApp;
+            }
             else if (txt == "секретное сообщение")
             {
                 ea = EnumActivity.SecretMessage;
             }
             else if (dbUser.id_last_question != null)
             {
-                var question = ctx.Questions.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
+                var question = ctx.biomarks.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
                 if (question != null)
                     ent = ParseAnswer(txt, question.format, question.splitter);
                 if (ent != "")
@@ -129,7 +141,7 @@ namespace WebApp
         //следующий вопрос
         private static int? FindNextQuestion(HealthBotContext ctx, users dbUser, int startIndex = -1)
         {
-            var q = ctx.Questions
+            var q = ctx.biomarks
                             .OrderBy(t => t.id)
                             .Where(t => t.id > startIndex)
                             .FirstOrDefault();
@@ -146,26 +158,44 @@ namespace WebApp
             {
                 if (df.Tag != null)
                 {
-                    message = ctx.Questions.Find(df.Tag).name;
+                    message = ctx.biomarks.Find(df.Tag).name;
                     dbUser.id_last_question = (int?)df.Tag;
                 }
             }
             else if (df.Activity == EnumActivity.LoadFile)
                 message = "Изображение сохранено";
             else if (df.Activity == EnumActivity.ConversationStart)
+            {
+                buttons = new[] { "Да", "Нет" };
                 message = "Хотите начать разговор?";
+            }
             else if (df.Activity == EnumActivity.ConversationStartAnswer)
                 message = "Здравствуйте!\nДля записи показаний отправьте мне \"запиши мои показания\"";
+            else if (df.Activity == EnumActivity.GetPlot)
+            {
+                var biomarks = GetScalableBiomarks(dbUser, ctx);    //должно коннектиться к Александру
+                if (biomarks.Length != 0)
+                {
+                    message = "По какому показателю хотите получить график?\n- " + String.Join("\n- ", biomarks);
+                    buttons = biomarks;
+                }
+                else message = "Нет показателей, которые можно было бы отобразить";
+            }
+            else if (df.Activity == EnumActivity.ConnectToMobileApp)
+                if (dbUser.phone_number.Length != 0)
+                {
+                    //коннект
+                }
+                else message = "Укажите, пожалуйста, свой номер телефона";  //что делать дальше??
             else if (df.Activity == EnumActivity.SecretMessage)
                 message = "Секретное сообщение принято";
 
-            //список кнопок (желательно четное число кнопок)
-            if (df.Activity == EnumActivity.ConversationStart)
-            {
-                buttons = new[] { "Да", "Нет" };
-            }
-
             return message;
+        }
+
+        private static string[] GetScalableBiomarks(users dbUser, HealthBotContext ctx)
+        {
+            return ctx.biomarks.Where(t => ctx.questions_answers.Where(q => q.id_user == dbUser.id).Select(z => z.id_question).Contains(t.id) && t.scalable).Select(t => t.name).ToArray();
         }
 
         public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx,

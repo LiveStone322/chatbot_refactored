@@ -20,7 +20,7 @@ namespace WebApp
 
         public DateTime date_time { get; set; }
 
-        public virtual questions questions { get; set; }
+        public virtual biomarks questions { get; set; }
 
         public virtual users users { get; set; }
     }

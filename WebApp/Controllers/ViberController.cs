@@ -55,7 +55,7 @@ namespace WebApp.Controllers
             using (var ctx = new HealthBotContext())
             {
                 var viberUser = callbackData.Sender;
-                var dbUser = ctx.Users.Where(t => t.loginViber == viberUser.Id).FirstOrDefault(); //изменить БД
+                var dbUser = ctx.users.Where(t => t.loginViber == viberUser.Id).FirstOrDefault(); //изменить БД
                 if (AppInfo.isDebugging) Console.WriteLine("В БД ЗАШЛО");
 
                 if (dbUser == null) //если пользователя нет
@@ -66,7 +66,7 @@ namespace WebApp.Controllers
                         loginViber = viberUser.Id,
                         fio = viberUser.Name,
                     };
-                    ctx.Users.Add(dbUser);
+                    ctx.users.Add(dbUser);
                 }
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(callbackData, ctx, dbUser);
@@ -88,7 +88,7 @@ namespace WebApp.Controllers
                     case DialogueFrame.EnumActivity.Answer:
                         if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.Answer");
                         //if (AppInfo.isDebugging) Console.WriteLine($"ID: {dbUser.id} ID_QUESTION: {(int)df.Tag} VALUE: {df.Entity}");
-                        await ctx.Questions_answers.AddAsync(new questions_answers
+                        await ctx.questions_answers.AddAsync(new questions_answers
                         {
                             id_user = dbUser.id,
                             id_question = dbUser.id_last_question.Value,
@@ -113,7 +113,7 @@ namespace WebApp.Controllers
                                 client.DownloadFile(uri, path + name);
                             }
 
-                            ctx.Files.Add(new files
+                            ctx.files.Add(new files
                             {
                                 content_hash = name,
                                 directory = "test",
