@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Telegram.Bot;
-using Viber.Bot;
+using ICQ.Bot;
+using ICQ.Bot.Args;
 using WebApp.Models;
 
 namespace WebApp
@@ -17,8 +17,76 @@ namespace WebApp
         public static void Main(string[] args)
         {
             RunNotificationsSender();
-            
+
+            RunICQ();
+
             CreateHostBuilder(args).Build().Run();
+        }
+
+        private static void RunICQ()
+        {
+            Bots.icqBot = new ICQBotClient(AppInfo.IcqToken);
+            Bots.icqBot.OnMessage += BotOnMessageReceived;
+            var me = Bots.icqBot.GetMeAsync().Result;
+
+            Bots.icqBot.StartReceiving();
+        }
+
+        private static void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
+        {
+            DialogueFrame df;
+            var message = messageEventArgs.Message;
+
+            using (var ctx = new HealthBotContext())
+            {
+                var icqUser = message.From;
+                var dbUser = ctx.users.Where(t => t.loginIcq == icqUser.UserId).FirstOrDefault();
+
+                if (dbUser == null) //если пользователя нет
+                {
+                    dbUser = new users()
+                    {
+                        // новые пользователи почему-то становятся в статус chatting
+                        loginIcq = icqUser.UserId,
+                        fio = icqUser.FirstName + " " + icqUser.LastName,
+                        icq_chat_id = icqUser.UserId
+                    };
+                    ctx.users.Add(dbUser);
+                }
+
+                //обработка сообщения (Dialogue state tracker)
+                df = DialogueFrame.GetDialogueFrame(message, ctx, dbUser);
+
+                //внутренняя работа в рамках платформы
+                if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return;
+                switch (df.Activity)
+                {
+                    case DialogueFrame.EnumActivity.Answer:
+                        ctx.questions_answers.Add(new questions_answers
+                        {
+                            id_user = dbUser.id,
+                            id_question = dbUser.id_last_question.Value,
+                            value = df.Entity
+                        });
+                        break;
+                    case DialogueFrame.EnumActivity.SystemAnswer:
+                        break;
+                    case DialogueFrame.EnumActivity.LoadFile:
+                        break;
+                    case DialogueFrame.EnumActivity.ReadMyBiomarkers:
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = false;
+                        break;
+                    case DialogueFrame.EnumActivity.ConversationStart: break;
+                    case DialogueFrame.EnumActivity.Unknown: break;
+                }
+
+                //обработка следующего сообщения (Dialogue state manager)
+                DialogueFrame.SendNextMessage(df, ctx, dbUser, Bots.icqBot).Wait();
+                ctx.SaveChanges();
+            }
+
+            return;
         }
 
         private static void RunNotificationsSender()

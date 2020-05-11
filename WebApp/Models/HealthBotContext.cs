@@ -72,8 +72,8 @@ namespace WebApp
 
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseNpgsql($"Host={AppInfo.DbHost};Database={AppInfo.DbName};" +
-                $"Username={AppInfo.DbLogin};Password={AppInfo.DbPassword}");
+            => optionsBuilder.UseNpgsql( $"Host={AppInfo.DbHost};Port={AppInfo.DbPort};Database={AppInfo.DbName};" +
+                $"Username={AppInfo.DbLogin};Password={AppInfo.DbPassword};sslmode=Require;Trust Server Certificate=true;");
 
     }
 }

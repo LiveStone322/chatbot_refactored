@@ -8,11 +8,12 @@ namespace WebApp
     {
         public static string TelegramToken { get; } = "824231491:AAG_0z_fj0u6aWQeR6ZSNJ0bghZkcfVvL-Y";
         public static string ViberToken { get; } = "4ab1909dba27d4f9-5979534a15d57be4-e416d3c08305903e";
-        public static string DbLogin { get; } = "postgres";
-        public static string DbPassword { get; } = "123123123";
-        public static string DbName { get; } = "health_bot";
-        public static string DbHost { get; } = "healthbot.ckuwobxeqhcr.us-east-1.rds.amazonaws.com";
-        public static int DbPort { get; } = 5432;
+        public static string IcqToken { get; } = "001.3482970284.2551975855:752724779";
+        public static string DbLogin { get; } = "doadmin";
+        public static string DbPassword { get; } = "dcwxq8x5sql288n7";
+        public static string DbName { get; } = "healthbot";
+        public static string DbHost { get; } = "db-postgresql-fra1-21567-do-user-7233904-0.a.db.ondigitalocean.com";
+        public static string DbPort { get; } = "25060";
         public static string Socks5Host { get; set; } = "127.0.0.1";    //хардкод - наше всё
         public static int Socks5Port { get; set; } = 8080;
         public static bool isDebugging { get; set; } = true; 

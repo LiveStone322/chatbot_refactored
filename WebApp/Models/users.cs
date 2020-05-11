@@ -35,7 +35,12 @@ namespace WebApp
         [StringLength(8000)]
         public string loginViber { get; set; }
 
+        public long? loginIcq { get; set; }
+
         public long? telegram_chat_id { get; set; }
+
+        public long? icq_chat_id { get; set; }
+
 
         [StringLength(8000)]
         public string token { get; set; }

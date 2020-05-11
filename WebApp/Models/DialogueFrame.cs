@@ -7,6 +7,7 @@ using Viber.Bot;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using ICQ.Bot;
 using System.Text.RegularExpressions;
 using ZulipAPI;
 using System.Net;
@@ -109,6 +110,14 @@ namespace WebApp
             string txt;
             if (e.Message.Text == null) txt = e.Message.Caption.ToLower();  //лучше смотреть тип сообщения
             else txt = e.Message.Text.ToLower();
+            return AnylizeMessage(txt, ctx, dbUser);
+        }
+
+        //icq
+        public static DialogueFrame GetDialogueFrame(ICQ.Bot.Types.Message e, HealthBotContext ctx, users dbUser)
+        {
+            string txt;
+            txt = e.Text.ToLower();
             return AnylizeMessage(txt, ctx, dbUser);
         }
 
@@ -533,10 +542,10 @@ namespace WebApp
                     {
                         keyboard = new ReplyKeyboardMarkup
                         {
-                            Keyboard = new[] {
-                            buttons.Select(t => new Telegram.Bot.Types.ReplyMarkups.KeyboardButton(t))
-                        },
-                            ResizeKeyboard = true
+                                Keyboard = new[] {
+                                    buttons.Select(t => new Telegram.Bot.Types.ReplyMarkups.KeyboardButton(t))
+                                },
+                                ResizeKeyboard = true
                         };
                         await client.SendTextMessageAsync(
                           chatId: chat,
@@ -627,6 +636,68 @@ namespace WebApp
                         });
                     }
 
+                }
+                else dbUser.id_last_question = null;
+            }
+        }
+
+        public static async Task SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, IICQBotClient client)
+        {
+            string message = "";
+            ICQ.Bot.Types.ReplyMarkups.InlineKeyboardMarkup keyboard;
+            string[] buttons = null;
+
+            if (df.Activity == EnumActivity.Unknown)
+                if (df.Entity != "") message = df.Entity;
+                else return;
+            else
+            {
+                message = await GetNextMessage(df, dbUser, ctx, buttons);
+                if (df.Activity == EnumActivity.CallHuman)
+                {
+                    dbUser.id_last_question = null;
+                    dbUser.is_last_question_system = null;
+                    dbUser.chatting = "icq";
+                }
+                if (dbUser.is_last_question_system.HasValue)
+                {
+                    //если нужно прислать картинку
+                    if (dbUser.is_last_question_system.Value == true && dbUser.id_last_question == (int)SystemMessages.SendBiomark_plot)
+                    {
+                        using (Stream stream = System.IO.File.OpenRead(dbUser.token + ".png"))
+                        {
+                            await client.SendFileAsync(
+                                chatId: dbUser.icq_chat_id,
+                                document: new ICQ.Bot.Types.InputFiles.InputOnlineFile(stream),
+                                caption: "Ваш график"
+                                );
+                        }
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = null;
+                    }
+                }
+                if (message != "")
+                {
+                    if (buttons != null)
+                    {
+                        keyboard = new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(
+                                buttons.Select(t => new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardButton() { Text = t })
+                            );
+
+                        await client.SendTextMessageAsync(
+                          chatId: dbUser.icq_chat_id,
+                          text: message,
+                          replyMarkup: keyboard
+                        );
+                    }
+                    else
+                    {
+                        await client.SendTextMessageAsync(
+                          chatId: dbUser.icq_chat_id,
+                          text: message,
+                          replyMarkup: new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardButton())
+                        );
+                    }
                 }
                 else dbUser.id_last_question = null;
             }
