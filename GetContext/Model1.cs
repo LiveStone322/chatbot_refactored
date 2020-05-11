@@ -8,10 +8,11 @@ namespace GetContext
     public partial class Model1 : DbContext
     {
         public Model1()
-            : base("name=Model14")
+            : base("name=Model16")
         {
         }
 
+        public virtual DbSet<app_table> app_table { get; set; }
         public virtual DbSet<biomarks> biomarks { get; set; }
         public virtual DbSet<files> files { get; set; }
         public virtual DbSet<notifications> notifications { get; set; }
@@ -52,6 +53,10 @@ namespace GetContext
                 .IsFixedLength();
 
             modelBuilder.Entity<users>()
+                .HasOptional(e => e.app_table)
+                .WithRequired(e => e.users);
+
+            modelBuilder.Entity<users>()
                 .HasMany(e => e.files)
                 .WithRequired(e => e.users)
                 .HasForeignKey(e => e.id_user)
@@ -70,8 +75,10 @@ namespace GetContext
                 .WillCascadeOnDelete(false);
 
             modelBuilder.Entity<users>()
-                .HasOptional(e => e.users_biomarks)
-                .WithRequired(e => e.users);
+                .HasMany(e => e.users_biomarks)
+                .WithRequired(e => e.users)
+                .HasForeignKey(e => e.id_user)
+                .WillCascadeOnDelete(false);
         }
     }
 }

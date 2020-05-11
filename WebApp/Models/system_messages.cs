@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApp
 {
-    [Table("biomarks")]
+    [Table("system_messages")]
     public class system_messages
     {
         public int id { get; set; }

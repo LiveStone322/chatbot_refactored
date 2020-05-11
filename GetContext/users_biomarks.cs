@@ -9,11 +9,11 @@ namespace GetContext
     [Table("public.users_biomarks")]
     public partial class users_biomarks
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int id_user { get; set; }
 
         public int? id_biomark { get; set; }
+
+        public int id { get; set; }
 
         public virtual biomarks biomarks { get; set; }
 

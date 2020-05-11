@@ -9,9 +9,33 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
 using System.Text.RegularExpressions;
 using ZulipAPI;
+using System.Net;
+using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace WebApp
 {
+    class BiomarkForApp
+    {
+        public string token;
+        public DateTime begin;
+        public DateTime end;
+        public string parameterName;
+
+        public BiomarkForApp(string token, DateTime begin, DateTime end, string parameterName)
+        {
+            this.token = token;
+            this.begin = begin;
+            this.end = end;
+            this.parameterName = parameterName;
+        }
+    }
+
+    class NextMessage
+    {
+        //сделать
+    }
+
     class DialogueFrame
     {
         public enum EnumActivity 
@@ -24,7 +48,28 @@ namespace WebApp
             SecretMessage,
             ConversationStartAnswer,
             GetPlot,
-            ConnectToMobileApp
+            ConnectToMobileApp,
+            DoNothing,
+            SystemAnswer,
+            SendToApp,
+            CallHuman,
+            Chatting
+        }
+
+        public enum SystemMessages
+        {
+            Hello = 1,  
+            ImageSaved = 2,
+            WantToStart = 3,   
+            SendBiomark_plot = 4,    
+            NoBiomarks = 5,
+            SendToken = 6,  
+            SecretMessage = 7,  
+            YouveEnteredToken = 8, 
+            ThanksForToken = 9,
+            SendBiomark_record = 11, 
+            SendBiomarkValue_record = 12,    
+            PleaseEnterNumber = 13,
         }
 
         public EnumActivity Activity { get; set; }  //действие пользователя, которое он от нас хочет
@@ -67,59 +112,148 @@ namespace WebApp
             return AnylizeMessage(txt, ctx, dbUser);
         }
 
-        private static DialogueFrame AnylizeMessage(string txt, HealthBotContext ctx, users dbUser)
+        public static string FindActivityEntityInTable(string[] words, HealthBotContext ctx)
         {
-            EnumActivity ea;
+            knowledge_base row;
+            if (words.Length > 1)
+                foreach (var first in words)
+                    foreach (var second in words)
+                    {
+                        row = ctx.knowledge_base.Where(t => t.activity == first && t.entity == second).FirstOrDefault();
+                        if (row != null) return row.output;
+                    }
+            else foreach (var first in words)   //такое себе, но а вдруг 0 элементов
+                {
+                    row = ctx.knowledge_base.Where(t => t.entity == first).FirstOrDefault();
+                    if (row != null) return row.output;
+                }
+
+            return null;
+        }
+
+
+        private static DialogueFrame AnylizeMessage(string message, HealthBotContext ctx, users dbUser)
+        {
+            EnumActivity ea = EnumActivity.DoNothing;
             string ent = "";
             object tag = null;
 
-            if (txt == "запиши мои показания")
+            if(dbUser.chatting != "")
             {
-                ea = EnumActivity.ReadMyBiomarkers;
-                tag = FindNextQuestion(ctx, dbUser);
+                ea = EnumActivity.Chatting;
+                ent = message;
             }
-            else if (txt == "загрузи файл")
+            else
             {
-                ea = EnumActivity.LoadFile;
-                //доп контекст не нужен?
-            }
-            else if ((txt == "да" || txt == "нет") && dbUser.id_last_question == null)
-            {
-                ea = EnumActivity.ConversationStartAnswer;
-            }
-            else if (txt == "/start")
-            {
-                ea = EnumActivity.ConversationStart;
-            }
-            else if (txt == "покажи мне график")
-            {
-                ea = EnumActivity.GetPlot;
-            }
-            else if (txt == "синхронизируй с приложением")
-            {
-                ea = EnumActivity.ConnectToMobileApp;
-            }
-            else if (txt == "секретное сообщение")
-            {
-                ea = EnumActivity.SecretMessage;
-            }
-            else if (dbUser.id_last_question != null)
-            {
-                var question = ctx.biomarks.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
-                if (question != null)
-                    ent = ParseAnswer(txt, question.format, question.splitter);
-                if (ent != "")
+                var txt = FindActivityEntityInTable(message.Replace(",", "").Replace(".", "").Replace(":", "").Split(' '), ctx);
+                if (txt == null) txt = message;
+
+                if (txt == "запиши мои показания")
                 {
-                    ea = EnumActivity.Answer;
-                    tag = FindNextQuestion(ctx, dbUser, dbUser.id_last_question.Value);
+                    ea = EnumActivity.ReadMyBiomarkers;
+                    tag = FindNextQuestion(ctx, dbUser);
                 }
-                else
+                else if (txt == "загрузи файл")
                 {
-                    ea = EnumActivity.Unknown;
-                    ent = "Ошибка при вводе показателя. Убедитесь, что Вы ввели все правильно"; 
-                };
+                    ea = EnumActivity.LoadFile;
+                    //доп контекст не нужен?
+                }
+                else if (txt == "/start")
+                {
+                    ea = EnumActivity.ConversationStart;
+                }
+                else if (txt == "покажи мне график приложения")
+                {
+                    ea = EnumActivity.GetPlot;
+                }
+                else if (txt == "введи показатель в приложение")
+                {
+                    ea = EnumActivity.SendToApp;
+                }
+                else if (txt == "синхронизируй с приложением")
+                {
+                    ea = EnumActivity.ConnectToMobileApp;
+                }
+                else if (txt == "позови человека")
+                {
+                    ea = EnumActivity.CallHuman;
+                }
+                else if (txt == "секретное сообщение")
+                {
+                    ea = EnumActivity.SecretMessage;
+                }
+                else if (dbUser.id_last_question != null && dbUser.is_last_question_system.HasValue)
+                {
+                    if (!dbUser.is_last_question_system.Value)
+                    {
+                        var question = ctx.biomarks.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
+                        if (question != null)
+                            ent = ParseAnswer(txt, question.format, question.splitter);
+                        if (ent != "")
+                        {
+                            ea = EnumActivity.Answer;
+                            tag = FindNextQuestion(ctx, dbUser, dbUser.id_last_question.Value);
+                        }
+                        else
+                        {
+                            ea = EnumActivity.Unknown;
+                            ent = "Ошибка при вводе показателя. Убедитесь, что Вы ввели все правильно";
+                        }
+                    }
+                    else
+                    {
+                        //системное сообщение
+                        bool makeNull = false;
+                        switch (dbUser.id_last_question)
+                        {
+                            case (int)SystemMessages.WantToStart:
+                                if (txt == "да") ea = EnumActivity.DoNothing;
+                                else
+                                {
+                                    ea = EnumActivity.Unknown;
+                                    ent = "Неправильный ответ";
+                                }
+                                makeNull = true;
+                                break;
+                            case (int)SystemMessages.SendBiomark_plot:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
+                                break;
+                            case (int)SystemMessages.SendBiomark_record:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
+                                break;
+                            case (int)SystemMessages.SendBiomarkValue_record:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
+                                break;
+                            case (int)SystemMessages.SendToken:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
+                                break;
+                            case (int)SystemMessages.YouveEnteredToken:
+                                if (txt == "да")
+                                {
+                                    ea = EnumActivity.SystemAnswer;
+                                    ent = txt;
+                                }
+                                else if (txt == "нет") ea = EnumActivity.DoNothing;
+                                else
+                                {
+                                    ea = EnumActivity.Unknown;
+                                    ent = "Ошибка при вводе. Повторите снова";
+                                }
+                                break;
+                        }
+                        if (ea == EnumActivity.DoNothing || ea == EnumActivity.Unknown)
+                        {
+                            dbUser.is_last_question_system = null;
+                            dbUser.id_last_question = null;
+                        }
+                    }
+                }
+                else ea = EnumActivity.Unknown;
             }
-            else ea = EnumActivity.Unknown;
 
             return new DialogueFrame(ea, ent, tag);
         }
@@ -138,67 +272,226 @@ namespace WebApp
             return result;
         }
 
-        //следующий вопрос
         private static int? FindNextQuestion(HealthBotContext ctx, users dbUser, int startIndex = -1)
         {
+            var qs = GetUsersBiomarks(dbUser, ctx).Select(t => t.id);
             var q = ctx.biomarks
                             .OrderBy(t => t.id)
-                            .Where(t => t.id > startIndex)
+                            .Where(t => t.id > startIndex && qs.Contains(t.id))
                             .FirstOrDefault();
+            
             if (q != null)
+            {
+                dbUser.is_last_question_system = false;
                 return q.id;
-            else return null;
+            }
+            else
+            {
+                dbUser.is_last_question_system = null;
+                return null;
+            }
         }
 
 
-        public static string GetNextMessage(DialogueFrame df, users dbUser, HealthBotContext ctx, ref string[] buttons)
+        public static async Task<string> GetNextMessage(DialogueFrame df, users dbUser, HealthBotContext ctx, string[] buttons)
         {
             string message = "";
-            if (df.Activity == EnumActivity.Answer || df.Activity == EnumActivity.ReadMyBiomarkers)
+            if (df.Activity == EnumActivity.CallHuman)
+            {
+                await SendToZulip(dbUser, ctx, "С Вами общается " + dbUser.fio, true);
+                message = "Ожидание оператора. Для отмены напишите \"Отмена\"";
+                dbUser.id_last_question = null;
+                dbUser.is_last_question_system = null;
+            }
+            else if (df.Activity == EnumActivity.Chatting)
+            {
+                if (df.Entity.ToLower() == "отмена")
+                {
+                    dbUser.chatting = "";
+                    message = "Диалог закончен. Спасибо";
+                }
+                await SendToZulip(dbUser, ctx, df.Entity, false);
+            }
+            else if (df.Activity == EnumActivity.Answer || df.Activity == EnumActivity.ReadMyBiomarkers)
             {
                 if (df.Tag != null)
                 {
-                    message = ctx.biomarks.Find(df.Tag).name;
+                    message = ctx.questions.Where(t => t.id_biomark == (int?)df.Tag).FirstOrDefault().question;
                     dbUser.id_last_question = (int?)df.Tag;
+                }
+                else return message;
+            }
+            else if (df.Activity == EnumActivity.SystemAnswer)
+            {
+                switch (dbUser.id_last_question)
+                {
+                    case (int)SystemMessages.SendBiomark_plot:
+                        message = App_GetPlot(dbUser.token, DateTime.MinValue, DateTime.Now, dbUser.context);
+                        if (message.Length == 0 || message == "К сожалению, приложение \"Здоровье\" не отвечает. попробуйте позже.")
+                        {
+                            dbUser.id_last_question = null;
+                            dbUser.is_last_question_system = null;
+                        }
+                        break;
+                    case (int)SystemMessages.SendToken:
+                        message = ctx.system_messages.Find((int)SystemMessages.ThanksForToken).message;
+                        dbUser.token = df.Entity;
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = null;
+                        break;
+                    case (int)SystemMessages.YouveEnteredToken:
+                        message = ctx.system_messages.Find((int)SystemMessages.SendToken).message;
+                        dbUser.id_last_question = (int)SystemMessages.SendToken;
+                        break;
+                    case (int)SystemMessages.SendBiomark_record:
+                        dbUser.context = df.Entity;
+                        message = ctx.system_messages.Find((int)SystemMessages.SendBiomarkValue_record).message;
+                        dbUser.id_last_question = (int)SystemMessages.SendBiomarkValue_record;
+                        dbUser.is_last_question_system = true;
+                        break;
+                    case (int)SystemMessages.SendBiomarkValue_record:
+                        double value;
+                        if (double.TryParse(df.Entity.Replace(',', '.'), out value))
+                        {
+                            message = App_AddRecord(dbUser.token, dbUser.context, DateTime.Now, value.ToString());
+                            dbUser.id_last_question = null;
+                            dbUser.is_last_question_system = null;
+                        }
+                        else
+                        {
+                            message = ctx.system_messages.Find((int)SystemMessages.PleaseEnterNumber).message;
+                            dbUser.id_last_question = (int)SystemMessages.SendBiomarkValue_record;
+                            dbUser.is_last_question_system = true;
+                        }
+                        break;
+
                 }
             }
             else if (df.Activity == EnumActivity.LoadFile)
-                message = "Изображение сохранено";
+                message = ctx.system_messages.Find((int)SystemMessages.ImageSaved).message;
             else if (df.Activity == EnumActivity.ConversationStart)
             {
                 buttons = new[] { "Да", "Нет" };
-                message = "Хотите начать разговор?";
+                message = ctx.system_messages.Find((int)SystemMessages.WantToStart).message;
+                dbUser.id_last_question = (int)SystemMessages.WantToStart;
+                dbUser.is_last_question_system = true;
             }
             else if (df.Activity == EnumActivity.ConversationStartAnswer)
-                message = "Здравствуйте!\nДля записи показаний отправьте мне \"запиши мои показания\"";
+                message = ctx.system_messages.Find((int)SystemMessages.Hello).message;
+            else if (df.Activity == EnumActivity.SendToApp)
+            {
+                message = ctx.system_messages.Find((int)SystemMessages.SendBiomark_record).message;
+                dbUser.id_last_question = (int)SystemMessages.SendBiomark_record;
+                dbUser.is_last_question_system = true;
+            }
             else if (df.Activity == EnumActivity.GetPlot)
             {
-                var biomarks = GetScalableBiomarks(dbUser, ctx);    //должно коннектиться к Александру
-                if (biomarks.Length != 0)
-                {
-                    message = "По какому показателю хотите получить график?\n- " + String.Join("\n- ", biomarks);
-                    buttons = biomarks;
-                }
-                else message = "Нет показателей, которые можно было бы отобразить";
+                message = ctx.system_messages.Find((int)SystemMessages.SendBiomark_plot).message;
+                dbUser.id_last_question = (int)SystemMessages.SendBiomark_plot;
+                dbUser.is_last_question_system = true;
             }
             else if (df.Activity == EnumActivity.ConnectToMobileApp)
-                if (dbUser.phone_number.Length != 0)
+                if (dbUser.token == null || dbUser.token.Length == 0)
                 {
-                    //коннект
+                    message = ctx.system_messages.Find((int)SystemMessages.SendToken).message;
+                    dbUser.id_last_question = (int)SystemMessages.SendToken;
+                    dbUser.is_last_question_system = true;
                 }
-                else message = "Укажите, пожалуйста, свой номер телефона";  //что делать дальше??
+                else
+                {
+                    message = ctx.system_messages.Find((int)SystemMessages.YouveEnteredToken).message;
+                    dbUser.id_last_question = (int)SystemMessages.YouveEnteredToken;
+                    dbUser.is_last_question_system = true;
+                }
             else if (df.Activity == EnumActivity.SecretMessage)
-                message = "Секретное сообщение принято";
+            {
+                message = ctx.system_messages.Find((int)SystemMessages.SecretMessage).message;
+                //message = App_AddRecord(dbUser.token, "шаги", DateTime.Now, "10.5");
+                //message = App_GetPlot(dbUser.token, DateTime.MinValue, DateTime.Now, "шаги");
+            }
+            else if (df.Activity == EnumActivity.Unknown)
+                message = df.Entity;
 
             return message;
         }
 
-        private static string[] GetScalableBiomarks(users dbUser, HealthBotContext ctx)
+        private static async Task SendToZulip(users dbUSer, HealthBotContext ctx, string txt, bool createUser)
         {
-            return ctx.biomarks.Where(t => ctx.questions_answers.Where(q => q.id_user == dbUser.id).Select(z => z.id_question).Contains(t.id) && t.scalable).Select(t => t.name).ToArray();
+            await Controllers.ZulipController.Send(txt, dbUSer.id, createUser);
         }
 
-        public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx,
+        private static string App_GetResponse(string url, string method, Dictionary<string, string> param, string filename = "error.png")
+        {
+            HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(url + "?" + string.Join("&", param.Select(pp => pp.Key + "=" + pp.Value)));
+            HttpWebResponse resp;
+            req.Method = method;
+            try
+            {
+                resp = (HttpWebResponse)req.GetResponse();
+            }
+            catch
+            {
+                return "К сожалению, приложение \"Здоровье\" не отвечает. попробуйте позже.";
+            }
+            if (resp.ContentType.StartsWith("image"))
+            {
+                using (Stream output = System.IO.File.OpenWrite(filename))
+                using (Stream input = resp.GetResponseStream())
+                {
+                    input.CopyTo(output);
+                }
+                return "";
+            }
+            else
+            {
+                string result = "";
+                using (Stream input = resp.GetResponseStream())
+                {
+                    int count = 0;
+                    byte[] buf = new byte[8192];
+                    do
+                    {
+                        count = input.Read(buf, 0, buf.Length);
+                        if (count != 0)
+                            result += Encoding.UTF8.GetString(buf, 0, count);
+                    }
+                    while (count > 0);
+                }
+
+                if (result == "") return "No output";
+                return result;
+            }
+        }
+
+        private static string App_AddRecord(string tokenValue, string parameterName, DateTime strDate, string strValue)
+        {
+            var postParams = new Dictionary<string, string>();
+            postParams.Add("tokenValue", "asdasdasd");
+            postParams.Add("parameterName", parameterName);
+            postParams.Add("strDate", strDate.ToString());
+            postParams.Add("strValue", strValue);
+
+            return App_GetResponse(@"http://285f7a81.ngrok.io/main/AddRecordToUser", "POST", postParams);
+        }
+
+        private static string App_GetPlot(string tokenValue, DateTime strBegin, DateTime strEnd, string parameterName)
+        {
+            var postParams = new Dictionary<string, string>();
+            postParams.Add("tokenValue", tokenValue);
+            postParams.Add("strBegin", strBegin.ToString());
+            postParams.Add("strEnd", strEnd.ToString());
+            postParams.Add("parameterName", parameterName);
+
+            return App_GetResponse(@"http://285f7a81.ngrok.io/main/getplot", "GET", postParams, tokenValue + ".png");
+            
+        }
+
+        private static biomarks[] GetUsersBiomarks(users dbUser, HealthBotContext ctx)
+        {
+            return ctx.biomarks.Where(t => ctx.users_biomarks.Where(q => q.id_user == dbUser.id).Select(z => z.id_biomark).Contains(t.id)).ToArray();
+        }
+
+        public static async Task SendNextMessage(DialogueFrame df, HealthBotContext ctx,
                                                             users dbUser, Chat chat, ITelegramBotClient client)
         {
             string message = "";
@@ -208,9 +501,32 @@ namespace WebApp
             if (df.Activity == EnumActivity.Unknown)
                 if (df.Entity != "") message = df.Entity;
                 else return;
-            else
+            else 
             {
-                message = GetNextMessage(df, dbUser, ctx, ref buttons);
+                message = await GetNextMessage(df, dbUser, ctx, buttons);
+                if (df.Activity == EnumActivity.CallHuman)
+                {
+                    dbUser.id_last_question = null;
+                    dbUser.is_last_question_system = null;
+                    dbUser.chatting = "telegram";
+                }
+                if (dbUser.is_last_question_system.HasValue)
+                {
+                    //если нужно прислать картинку
+                    if (dbUser.is_last_question_system.Value == true && dbUser.id_last_question == (int)SystemMessages.SendBiomark_plot)
+                    {
+                        using (Stream stream = System.IO.File.OpenRead(dbUser.token + ".png"))
+                        {
+                            await client.SendPhotoAsync(
+                                chatId: chat,
+                                photo: stream,
+                                caption: "Ваш график"
+                                );
+                        }
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = null;
+                    }
+                }
                 if (message != "")
                 {
                     if (buttons != null)
@@ -241,7 +557,8 @@ namespace WebApp
             }
         }
 
-        public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, CallbackData callbackData, IViberBotClient viberBot)
+        public static async void SendNextMessage(DialogueFrame df, HealthBotContext ctx, users dbUser, 
+                                                        CallbackData callbackData, IViberBotClient client)
         {
             string message = "";
             Keyboard keyboard;
@@ -252,7 +569,34 @@ namespace WebApp
                 else return;
             else
             {
-                message = GetNextMessage(df, dbUser, ctx, ref buttons);
+                message = await GetNextMessage(df, dbUser, ctx, buttons);
+                if (df.Activity == EnumActivity.CallHuman)
+                {
+                    dbUser.id_last_question = null;
+                    dbUser.is_last_question_system = null;
+                    dbUser.chatting = "viber";
+                }
+                if (dbUser.is_last_question_system.HasValue)
+                {
+                    //если нужно прислать картинку
+                    if (dbUser.is_last_question_system.Value == true && dbUser.id_last_question == (int)SystemMessages.SendBiomark_plot)
+                    {
+                        using (Stream stream = System.IO.File.OpenRead(dbUser.token + ".png"))
+                        {
+                            await client.SendPictureMessageAsync(
+                                    new PictureMessage() {
+                                        Text = "Ваш график",
+                                        Receiver = callbackData.Sender.Id,
+                                        MinApiVersion = callbackData.Message.MinApiVersion,
+                                        TrackingData = callbackData.Message.TrackingData,
+                                        Media = "https://upload.wikimedia.org/wikipedia/commons/5/57/Viber-logo.png" //viber is lame
+                                    }
+                                );
+                        }
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = null;
+                    }
+                }
                 if (message != "")
                 {
                     dbUser.id_last_question = (int?)df.Tag;
@@ -263,7 +607,7 @@ namespace WebApp
                             BackgroundColor = "#32C832",
                             Buttons = buttons.Select(t => new Viber.Bot.KeyboardButton() { Text = t }).ToList()
                         };
-                        await viberBot.SendKeyboardMessageAsync(new KeyboardMessage
+                        await client.SendKeyboardMessageAsync(new KeyboardMessage
                         {
                             Text = message,
                             Keyboard = keyboard,
@@ -274,7 +618,7 @@ namespace WebApp
                     }
                     else
                     {
-                        await viberBot.SendTextMessageAsync(new TextMessage()
+                        await client.SendTextMessageAsync(new TextMessage()
                         {
                             Text = message,
                             Receiver = callbackData.Sender.Id,

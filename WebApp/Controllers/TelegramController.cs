@@ -53,6 +53,7 @@ namespace WebApp.Controllers
                 df = DialogueFrame.GetDialogueFrame(update, ctx, dbUser);
 
                 //внутренняя работа в рамках платформы
+                if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return Ok();
                 switch (df.Activity)
                 {
                     case DialogueFrame.EnumActivity.Answer:
@@ -62,6 +63,8 @@ namespace WebApp.Controllers
                             id_question = dbUser.id_last_question.Value,
                             value = df.Entity
                         });
+                        break;
+                    case DialogueFrame.EnumActivity.SystemAnswer:
                         break;
                     case DialogueFrame.EnumActivity.LoadFile:
                         var path = Path.GetFullPath(@"..\..\");
@@ -79,13 +82,14 @@ namespace WebApp.Controllers
                         break;
                     case DialogueFrame.EnumActivity.ReadMyBiomarkers:
                         dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = false;
                         break;
                     case DialogueFrame.EnumActivity.ConversationStart: break;
                     case DialogueFrame.EnumActivity.Unknown: break;
                 }
 
                 //обработка следующего сообщения (Dialogue state manager)
-                DialogueFrame.SendNextMessage(df, ctx, dbUser, update.Message.Chat, Bots.telegramBot);
+                await DialogueFrame.SendNextMessage(df, ctx, dbUser, update.Message.Chat, Bots.telegramBot);
                 await ctx.SaveChangesAsync();
             }
 

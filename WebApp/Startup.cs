@@ -11,6 +11,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using WebApp.Models;
+using ZulipAPI;
+using ZulipAPI.Messages;
+
 
 namespace WebApp
 {
@@ -35,6 +38,10 @@ namespace WebApp
             Bots.viberBot = new Viber.Bot.ViberBotClient(AppInfo.ViberToken);
             Bots.telegramBot = new Telegram.Bot.TelegramBotClient(AppInfo.TelegramToken,
                                              new MihaZupan.HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
+
+            Zulip.zclient = new ZulipServer(AppInfo.ZulipServerURL).Login(AppInfo.ZulipEmail, AppInfo.ZulipPass);
+
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

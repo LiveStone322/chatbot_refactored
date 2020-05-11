@@ -36,7 +36,7 @@ namespace WebApp
         {
             using (var ctx = new HealthBotContext())
             {
-                var notificatedUsers = ctx.Users.Where(t => ctx.Notifications.Where(n => CheckTime(n.on_time)).Select(q => q.id).Contains(t.id)).Select(e => e.id);
+                var notificatedUsers = ctx.users.Where(t => ctx.notifications.Where(n => CheckTime(n.on_time)).Select(q => q.id).Contains(t.id)).Select(e => e.id);
 
             };
         }

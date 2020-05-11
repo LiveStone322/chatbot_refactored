@@ -15,6 +15,9 @@ namespace WebApp
         public static int DbPort { get; } = 5432;
         public static string Socks5Host { get; set; } = "127.0.0.1";    //хардкод - наше всё
         public static int Socks5Port { get; set; } = 8080;
-        public static bool isDebugging { get; set; } = true;
+        public static bool isDebugging { get; set; } = true; 
+        public static string ZulipPass { get; set; } = "LlpyVNXLgtZb5CXHow9EL7fzKl74o4fv";   
+        public static string ZulipServerURL { get; set; } = "https://zulipapp.my.to/";
+        public static string ZulipEmail { get; set; } = "live.stone.anton@yandex.ru";
     }
 }

@@ -41,12 +41,6 @@ namespace WebApp.Controllers
             //fstream.WriteLine(body);
             //fstream.Close();
 
-            //какая-то проверка
-            //var isSignatureValid = ViberBot.viberBot.ValidateWebhookHash(Request.Headers["X-Viber-Content-Signature"], body);
-            //if (!isSignatureValid)
-            //{
-            //    return new StatusCodeResult(StatusCodes.Status406NotAcceptable);
-            //}
             var callbackData = JsonConvert.DeserializeObject<CallbackData>(body);
             if (AppInfo.isDebugging) Console.WriteLine("СООБЩЕНИЕ ДЕСЕРИАЛИЗОВАЛОСЬ");
 
@@ -64,7 +58,7 @@ namespace WebApp.Controllers
                     dbUser = new users()
                     {
                         loginViber = viberUser.Id,
-                        fio = viberUser.Name,
+                        fio = viberUser.Name
                     };
                     ctx.users.Add(dbUser);
                 }
@@ -72,22 +66,10 @@ namespace WebApp.Controllers
                 df = DialogueFrame.GetDialogueFrame(callbackData, ctx, dbUser);
                 if (AppInfo.isDebugging) Console.WriteLine("СООБЩЕНИЕ ПОНЯТНО");
 
-                //внутренняя работа
+                if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return Ok();
                 switch (df.Activity)
                 {
-                    case DialogueFrame.EnumActivity.Unknown:
-                        if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.Unknown");
-                        return Ok();
-                    case DialogueFrame.EnumActivity.ReadMyBiomarkers:
-                        if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.ReadMyBiomarkers");
-                        dbUser.id_last_question = null;
-                        break;
-                    case DialogueFrame.EnumActivity.ConversationStart:
-                        if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.ConversationStart"); 
-                        break; //доделать
                     case DialogueFrame.EnumActivity.Answer:
-                        if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.Answer");
-                        //if (AppInfo.isDebugging) Console.WriteLine($"ID: {dbUser.id} ID_QUESTION: {(int)df.Tag} VALUE: {df.Entity}");
                         await ctx.questions_answers.AddAsync(new questions_answers
                         {
                             id_user = dbUser.id,
@@ -95,9 +77,7 @@ namespace WebApp.Controllers
                             value = df.Entity
                         });
                         break;
-                    case DialogueFrame.EnumActivity.SecretMessage:
-                        if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.SecretMessage");
-                        AppInfo.isDebugging = !AppInfo.isDebugging; 
+                    case DialogueFrame.EnumActivity.SystemAnswer:
                         break;
                     case DialogueFrame.EnumActivity.LoadFile:
                         if (AppInfo.isDebugging) Console.WriteLine("EnumActivity.LoadFile");
@@ -138,9 +118,14 @@ namespace WebApp.Controllers
                             });
                             break;
                         }
+                        break;
+                    case DialogueFrame.EnumActivity.ReadMyBiomarkers:
+                        dbUser.id_last_question = null;
+                        dbUser.is_last_question_system = false;
+                        break;
+                    case DialogueFrame.EnumActivity.ConversationStart: break;
+                    case DialogueFrame.EnumActivity.Unknown: break;
                 }
-
-
 
                 //обработка следующего сообщения (Dialogue state manager)
                 DialogueFrame.SendNextMessage(df, ctx, dbUser, callbackData, Bots.viberBot);
