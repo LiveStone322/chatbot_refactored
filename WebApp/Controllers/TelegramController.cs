@@ -61,7 +61,8 @@ namespace WebApp.Controllers
                         {
                             id_user = dbUser.id,
                             id_question = dbUser.id_last_question.Value,
-                            value = df.Entity
+                            value = df.Entity,
+                            date_time = DateTime.Now
                         });
                         break;
                     case DialogueFrame.EnumActivity.SystemAnswer:

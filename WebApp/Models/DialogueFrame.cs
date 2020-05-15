@@ -54,7 +54,9 @@ namespace WebApp
             SystemAnswer,
             SendToApp,
             CallHuman,
-            Chatting
+            Chatting,
+            AddBiomarks,
+            PrintBiomarks
         }
 
         public enum SystemMessages
@@ -71,6 +73,11 @@ namespace WebApp
             SendBiomark_record = 11, 
             SendBiomarkValue_record = 12,    
             PleaseEnterNumber = 13,
+            YouDontHaveBiomarksToTrack = 14,
+            ErrorInputBiomark = 15,
+            PleaseListBiomarks = 16,
+            Success = 17,
+            WhatPeriod = 18
         }
 
         public EnumActivity Activity { get; set; }  //действие пользователя, которое он от нас хочет
@@ -147,7 +154,7 @@ namespace WebApp
             string ent = "";
             object tag = null;
 
-            if(dbUser.chatting != "")
+            if(dbUser.chatting!=null && dbUser.chatting != "")
             {
                 ea = EnumActivity.Chatting;
                 ent = message;
@@ -161,11 +168,16 @@ namespace WebApp
                 {
                     ea = EnumActivity.ReadMyBiomarkers;
                     tag = FindNextQuestion(ctx, dbUser);
+                    if (tag == null) ent = ctx.system_messages.Find((int)SystemMessages.YouDontHaveBiomarksToTrack).message;
                 }
                 else if (txt == "загрузи файл")
                 {
                     ea = EnumActivity.LoadFile;
                     //доп контекст не нужен?
+                }
+                else if (txt == "добавь показатели")
+                {
+                    ea = EnumActivity.AddBiomarks;
                 }
                 else if (txt == "/start")
                 {
@@ -187,12 +199,17 @@ namespace WebApp
                 {
                     ea = EnumActivity.CallHuman;
                 }
+                else if (txt == "выведи показания")
+                {
+                    ea = EnumActivity.PrintBiomarks;
+                }
                 else if (txt == "секретное сообщение")
                 {
                     ea = EnumActivity.SecretMessage;
                 }
                 else if (dbUser.id_last_question != null && dbUser.is_last_question_system.HasValue)
                 {
+                    //ответ на запись показаний
                     if (!dbUser.is_last_question_system.Value)
                     {
                         var question = ctx.biomarks.Where(t => t.id == dbUser.id_last_question).FirstOrDefault();
@@ -206,7 +223,8 @@ namespace WebApp
                         else
                         {
                             ea = EnumActivity.Unknown;
-                            ent = "Ошибка при вводе показателя. Убедитесь, что Вы ввели все правильно";
+                            ent = ctx.system_messages.Find((int)SystemMessages.ErrorInputBiomark).message;
+                            tag = true;
                         }
                     }
                     else
@@ -252,6 +270,14 @@ namespace WebApp
                                     ea = EnumActivity.Unknown;
                                     ent = "Ошибка при вводе. Повторите снова";
                                 }
+                                break;
+                            case (int)SystemMessages.PleaseListBiomarks:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
+                                break;
+                            case (int)SystemMessages.WhatPeriod:
+                                ea = EnumActivity.SystemAnswer;
+                                ent = txt;
                                 break;
                         }
                         if (ea == EnumActivity.DoNothing || ea == EnumActivity.Unknown)
@@ -308,7 +334,7 @@ namespace WebApp
             if (df.Activity == EnumActivity.CallHuman)
             {
                 await SendToZulip(dbUser, ctx, "С Вами общается " + dbUser.fio, true);
-                message = "Ожидание оператора. Для отмены напишите \"Отмена\"";
+                message = "Ожидание оператора. Для отмены напишите \"Отмена\". (прим. автора: операторов нет, поэтому скорее всего ждать придется очень долго)";
                 dbUser.id_last_question = null;
                 dbUser.is_last_question_system = null;
             }
@@ -320,6 +346,19 @@ namespace WebApp
                     message = "Диалог закончен. Спасибо";
                 }
                 await SendToZulip(dbUser, ctx, df.Entity, false);
+            }
+            else if (df.Activity == EnumActivity.AddBiomarks)
+            {
+                message = ctx.system_messages.Find((int)SystemMessages.PleaseListBiomarks).message;
+                dbUser.id_last_question = (int)SystemMessages.PleaseListBiomarks;
+                dbUser.is_last_question_system = true;
+            }
+            else if (df.Activity == EnumActivity.PrintBiomarks)
+            {
+                message = ctx.system_messages.Find((int)SystemMessages.WhatPeriod).message;
+                dbUser.id_last_question = (int)SystemMessages.WhatPeriod;
+                dbUser.context = ((int)EnumActivity.PrintBiomarks).ToString();
+                dbUser.is_last_question_system = true;
             }
             else if (df.Activity == EnumActivity.Answer || df.Activity == EnumActivity.ReadMyBiomarkers)
             {
@@ -373,7 +412,58 @@ namespace WebApp
                             dbUser.is_last_question_system = true;
                         }
                         break;
-
+                    case (int)SystemMessages.PleaseListBiomarks:
+                        try
+                        {
+                            var biomarks = df.Entity.Split(", ");
+                            biomarks dbB = null;
+                            foreach (var b in biomarks)
+                            {
+                                dbB = ctx.biomarks.Where(t => t.name == b).FirstOrDefault();
+                                if (dbB != null && !ctx.users_biomarks.Select(t => t.id_biomark).Contains(dbB.id)) 
+                                    ctx.users_biomarks.Add(new users_biomarks() { id_user = dbUser.id, id_biomark = dbB.id });
+                            }
+                            message = ctx.system_messages.Find((int)SystemMessages.Success).message;
+                            dbUser.id_last_question = null;
+                            dbUser.is_last_question_system = null;
+                        }
+                        catch (Exception e)
+                        {
+                            message = e.Message;
+                            dbUser.id_last_question = null;
+                            dbUser.is_last_question_system = null;
+                        }
+                        break;
+                    case (int)SystemMessages.WhatPeriod:
+                        {
+                            if (dbUser.context == ((int)EnumActivity.PrintBiomarks).ToString())
+                                switch(df.Entity)
+                                {
+                                    case "сутки":
+                                        message = PrintBiomarks(dbUser, ctx, 1);
+                                        dbUser.id_last_question = null;
+                                        dbUser.is_last_question_system = null;
+                                        break;
+                                    case "неделя":
+                                        message = PrintBiomarks(dbUser, ctx, 7);
+                                        dbUser.id_last_question = null;
+                                        dbUser.is_last_question_system = null;
+                                        break;
+                                    case "месяц":
+                                        message = PrintBiomarks(dbUser, ctx, 30);
+                                        dbUser.id_last_question = null;
+                                        dbUser.is_last_question_system = null;
+                                        break;
+                                    default: 
+                                        message = "Ошибка при вводе перида";
+                                        dbUser.id_last_question = null;
+                                        dbUser.is_last_question_system = null;
+                                        break;
+                                }
+                            if (message == "") message = "Нет показателей для вывода. Для записи показателей напшите \"Запиши мои показатели\"";
+                            dbUser.context = "";
+                            break;
+                        }
                 }
             }
             else if (df.Activity == EnumActivity.LoadFile)
@@ -421,6 +511,33 @@ namespace WebApp
             else if (df.Activity == EnumActivity.Unknown)
                 message = df.Entity;
 
+            return message;
+        }
+
+        private static string PrintBiomarks(users dbUser, HealthBotContext ctx, int t)
+        {
+            //var table = from questions_answers in ctx.questions_answers
+            //            join biomarks in ctx.biomarks on questions_answers.id_question equals biomarks.id
+            //            where (questions_answers.id_user == dbUser.id && ((DateTime.Now - questions_answers.date_time).TotalHours / 24) <= t)
+            //            select new
+            //            {
+            //                name = biomarks.name,
+            //                value = questions_answers.value
+            //            };
+            var time = DateTime.Now.Subtract(new TimeSpan(t, 0, 0, 0));
+            var bs = ctx.questions_answers
+                    .Where(qa => qa.id_user == dbUser.id && qa.date_time >= time)
+                    .Join(ctx.biomarks, z => z.id_question, b => b.id, (z, b) => new
+                    {
+                        name = b.name,
+                        value = z.value
+                    })
+                    .OrderBy(z => z.name)
+                    .ToList();
+            string message = "";
+            foreach (var b in bs)
+                message += b.name + ": " + b.value + "\n";
+            if (message != "") return message.Substring(0, message.Length - 1);
             return message;
         }
 
@@ -648,7 +765,12 @@ namespace WebApp
             string[] buttons = null;
 
             if (df.Activity == EnumActivity.Unknown)
-                if (df.Entity != "") message = df.Entity;
+                if (df.Tag != null) 
+                    await client.SendTextMessageAsync(
+                          chatId: dbUser.icq_chat_id,
+                          text: df.Entity,
+                          replyMarkup: null
+                        );
                 else return;
             else
             {
@@ -662,19 +784,19 @@ namespace WebApp
                 if (dbUser.is_last_question_system.HasValue)
                 {
                     //если нужно прислать картинку
-                    if (dbUser.is_last_question_system.Value == true && dbUser.id_last_question == (int)SystemMessages.SendBiomark_plot)
-                    {
-                        using (Stream stream = System.IO.File.OpenRead(dbUser.token + ".png"))
-                        {
-                            await client.SendFileAsync(
-                                chatId: dbUser.icq_chat_id,
-                                document: new ICQ.Bot.Types.InputFiles.InputOnlineFile(stream),
-                                caption: "Ваш график"
-                                );
-                        }
-                        dbUser.id_last_question = null;
-                        dbUser.is_last_question_system = null;
-                    }
+                    //if (dbUser.is_last_question_system.Value && dbUser.id_last_question == (int)SystemMessages.SendBiomark_plot)
+                    //{
+                    //    using (Stream stream = System.IO.File.OpenRead(dbUser.token + ".png"))
+                    //    {
+                    //        await client.SendFileAsync(
+                    //            chatId: dbUser.icq_chat_id,
+                    //            document: new ICQ.Bot.Types.InputFiles.InputOnlineFile(stream),
+                    //            caption: "Ваш график"
+                    //            );
+                    //    }
+                    //    dbUser.id_last_question = null;
+                    //    dbUser.is_last_question_system = null;
+                    //}
                 }
                 if (message != "")
                 {
@@ -695,7 +817,7 @@ namespace WebApp
                         await client.SendTextMessageAsync(
                           chatId: dbUser.icq_chat_id,
                           text: message,
-                          replyMarkup: new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(new ICQ.Bot.Types.ReplyMarkups.InlineKeyboardButton())
+                          replyMarkup: null
                         );
                     }
                 }

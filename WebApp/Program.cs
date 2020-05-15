@@ -57,7 +57,7 @@ namespace WebApp
                 //обработка сообщения (Dialogue state tracker)
                 df = DialogueFrame.GetDialogueFrame(message, ctx, dbUser);
 
-                //внутренняя работа в рамках платформы
+                //доп. работа
                 if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return;
                 switch (df.Activity)
                 {
@@ -66,7 +66,8 @@ namespace WebApp
                         {
                             id_user = dbUser.id,
                             id_question = dbUser.id_last_question.Value,
-                            value = df.Entity
+                            value = df.Entity,
+                            date_time = DateTime.Now
                         });
                         break;
                     case DialogueFrame.EnumActivity.SystemAnswer:
