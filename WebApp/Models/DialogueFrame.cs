@@ -420,7 +420,7 @@ namespace WebApp
                             foreach (var b in biomarks)
                             {
                                 dbB = ctx.biomarks.Where(t => t.name == b).FirstOrDefault();
-                                if (dbB != null && !ctx.users_biomarks.Select(t => t.id_biomark).Contains(dbB.id)) 
+                                if (dbB != null && !ctx.users_biomarks.Where(t => t.id_user == dbUser.id).Select(t => t.id_biomark).Contains(dbB.id)) 
                                     ctx.users_biomarks.Add(new users_biomarks() { id_user = dbUser.id, id_biomark = dbB.id });
                             }
                             message = ctx.system_messages.Find((int)SystemMessages.Success).message;
