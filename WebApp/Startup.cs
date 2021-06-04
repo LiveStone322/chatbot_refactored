@@ -35,9 +35,9 @@ namespace WebApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            Bots.viberBot = new Viber.Bot.ViberBotClient(AppInfo.ViberToken);
-            Bots.telegramBot = new Telegram.Bot.TelegramBotClient(AppInfo.TelegramToken,
-                                             new MihaZupan.HttpToSocks5Proxy(AppInfo.Socks5Host, AppInfo.Socks5Port));
+            Shared.NL = new nl_fhir.NLModel();
+            Shared.viberBot = new Viber.Bot.ViberBotClient(AppInfo.ViberToken);
+            
 
             Zulip.zclient = new ZulipServer(AppInfo.ZulipServerURL).Login(AppInfo.ZulipEmail, AppInfo.ZulipPass);
 

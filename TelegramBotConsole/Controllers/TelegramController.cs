@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.IO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types;
-using WebApp.Models;
+using TelegramBotConsole.Models;
 using Newtonsoft.Json;
-using Telegram.Bot.Args;
 
 //dotnet publish -c Release -r linux-x64 --self-contained true
-namespace WebApp.Controllers
+namespace TelegramBotConsole.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,6 +18,7 @@ namespace WebApp.Controllers
     {
         public async Task<StatusCodeResult> Post()
         {
+            DialogueFrame df;
             string body;
             using (var reader = new StreamReader(Request.Body))
                 body = await reader.ReadToEndAsync();
@@ -30,22 +28,11 @@ namespace WebApp.Controllers
             if (update.Type != Telegram.Bot.Types.Enums.UpdateType.Message)
                 return Ok();
 
-            ProcessMessage(update.Message.From, update.Message);
-
-            return Ok();
-        }
-
-        public static async void Bot_OnMessage(object sender, MessageEventArgs e)
-        {
-            ProcessMessage(e.Message.From, e.Message);
-        }
-
-        private static async void ProcessMessage(User tlgrmUser, Message message)
-        {
-            DialogueFrame df;
+            Console.WriteLine(update);
 
             using (var ctx = new HealthBotContext())
             {
+                var tlgrmUser = update.Message.From;
                 var dbUser = ctx.users.Where(t => t.loginTelegram == tlgrmUser.Username).FirstOrDefault();
 
                 if (dbUser == null) //если пользователя нет
@@ -55,16 +42,16 @@ namespace WebApp.Controllers
 
                         loginTelegram = tlgrmUser.Username,
                         fio = tlgrmUser.FirstName + " " + tlgrmUser.LastName,
-                        telegram_chat_id = message.Chat.Id
+                        telegram_chat_id = update.Message.Chat.Id
                     };
                     ctx.users.Add(dbUser);
                 }
 
                 //обработка сообщения (Dialogue state tracker)
-                df = DialogueFrame.GetDialogueFrame(message, ctx, dbUser);
+                df = DialogueFrame.GetDialogueFrame(update, ctx, dbUser);
 
                 //внутренняя работа в рамках платформы
-                if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return;
+                if (df.Activity == DialogueFrame.EnumActivity.DoNothing) return Ok();
                 switch (df.Activity)
                 {
                     case DialogueFrame.EnumActivity.Answer:
@@ -80,7 +67,7 @@ namespace WebApp.Controllers
                         break;
                     case DialogueFrame.EnumActivity.LoadFile:
                         var path = Path.GetFullPath(@"..\..\");
-                        var name = message.Photo[message.Photo.Length - 1].FileId;
+                        var name = update.Message.Photo[update.Message.Photo.Length - 1].FileId;
                         DownloadFile(name, path + name);
                         ctx.files.Add(new files
                         {
@@ -101,19 +88,21 @@ namespace WebApp.Controllers
                 }
 
                 //обработка следующего сообщения (Dialogue state manager)
-                await DialogueFrame.SendNextMessage(df, ctx, dbUser, message.Chat, Shared.telegramBot);
+                await DialogueFrame.SendNextMessage(df, ctx, dbUser, update.Message.Chat, Bots.telegramBot);
                 await ctx.SaveChangesAsync();
             }
+
+            return Ok();
         }
 
         private static async void DownloadFile(string fileId, string path)
         {
             try
             {
-                var file = await Shared.telegramBot.GetFileAsync(fileId);
+                var file = await Bots.telegramBot.GetFileAsync(fileId);
                 using (var stream = new FileStream(path, FileMode.Create))
                 {
-                    await Shared.telegramBot.DownloadFileAsync(file.FilePath, stream);
+                    await Bots.telegramBot.DownloadFileAsync(file.FilePath, stream);
                 }
             }
             catch (Exception ex)

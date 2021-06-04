@@ -1,0 +1,51 @@
+type,text
+add_user,новый пациент
+add_user,добавь пациента
+add_user,нужно добавить пользователя
+add_user,нужно добавить пациента
+add_user,добавь нового пациента
+show_information,информация
+show_information,выведи информацию
+show_information,что там у Иванова Сергея?
+show_information,выдай информацию по Жанне Евгеньевной
+show_information,покажи все что знаешь о Дмитрие Андрееве
+show_information,покажи все собственно что знаешь о Дмитрие Андрееве
+show_information,мне нужна информацию о всех
+show_information,мне необходима информацию о всех
+show_information,хочу узнать информацию по пациенту
+show_information,информация пациента
+show_information,карточку пациента
+show_information,карта пациента
+show_information,покажи карточку пациента
+show_information,покажи карту пациента
+show_information,выдай карту пациента
+show_information,выдай информацию о пациенте Иванове
+show_information,найди мне Иванова Ивана
+show_information,найди все о Иванове Иване
+add_biomark,показатель
+add_biomark,добавь показатель
+add_biomark,добавь показания
+add_biomark,задай показатели пациенту
+add_biomark,установить показатели для пациента
+add_biomark,пациент ввел показатели
+add_biomark,пациент хочет добавить показатели
+add_biomark,пациент хочет добавить свои показания
+load_file,файл
+load_file,загрузи файл
+load_file,прими файл
+load_file,загрузи картинку
+load_file,загрузить решение врача
+load_file,загрузить врачебное решение
+load_file,прими файлик
+load_file,прими результаты исследования
+load_file,прими результаты исследования
+show_plot,Выведи график из приложения
+show_plot,покажи график
+show_plot,график
+show_plot,выведи график по моему показателю
+show_plot,выведи график по показанию
+show_plot,нужен график по показателю
+show_plot,выведи все данные за вчерашний день по поводу давления
+show_plot,выведи все данные о давлении за вчера
+show_plot,данные о давлении за последний год
+show_plot,дай мне данные о давлении

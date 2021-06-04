@@ -18,22 +18,25 @@ namespace WebApp
         {
             RunNotificationsSender();
 
-            RunICQ();
+            RunBot();
 
             CreateHostBuilder(args).Build().Run();
         }
 
-        private static void RunICQ()
+        private static void RunBot()
         {
-            Bots.icqBot = new ICQBotClient(AppInfo.IcqToken);
-            Bots.icqBot.OnMessage += BotOnMessageReceived;
-            var me = Bots.icqBot.GetMeAsync().Result;
+            Shared.icqBot = new ICQBotClient(AppInfo.IcqToken);
+            Shared.telegramBot = new Telegram.Bot.TelegramBotClient(AppInfo.TelegramToken);
 
-            Bots.icqBot.StartReceiving();
+            Shared.icqBot.OnMessage += BotOnMessageReceived;
+            Shared.telegramBot.OnMessage += Controllers.TelegramController.Bot_OnMessage;
+
+            Shared.telegramBot.StartReceiving();
+            Shared.icqBot.StartReceiving();
         }
 
         private static void BotOnMessageReceived(object sender, MessageEventArgs messageEventArgs)
-        {
+        {/*
             DialogueFrame df;
             var message = messageEventArgs.Message;
 
@@ -83,11 +86,11 @@ namespace WebApp
                 }
 
                 //обработка следующего сообщения (Dialogue state manager)
-                DialogueFrame.SendNextMessage(df, ctx, dbUser, Bots.icqBot).Wait();
+                DialogueFrame.SendNextMessage(df, ctx, dbUser, Shared.icqBot).Wait();
                 ctx.SaveChanges();
             }
 
-            return;
+            return;*/
         }
 
         private static void RunNotificationsSender()

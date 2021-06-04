@@ -1,0 +1,51 @@
+type,text
+add_user,НОВЫЙ ПАЦИЕНТ
+add_user,ДОБАВИТЬ ПАЦИЕНТ
+add_user,ДОБАВИТЬ ПОЛЬЗОВАТЕЛЬ
+add_user,ДОБАВИТЬ ПАЦИЕНТ
+add_user,ДОБАВИТЬ НОВОЕ ПАЦИЕНТ
+show_information,ИНФОРМАЦИЯ
+show_information,ВЫВЕСТИ ИНФОРМАЦИЯ
+show_information,?
+show_information,ВЫДАТЬ ИНФОРМАЦИЯ ЖАННА ЕВГЕНЬЕВНА
+show_information,ПОКАЗАТЬ ЗНАТЬ
+show_information,ПОКАЗАТЬ СОБСТВЕННОЕ ЗНАТЬ
+show_information,НУЖНАЯ ИНФОРМАЦИЯ
+show_information,НЕОБХОДИМАЯ ИНФОРМАЦИЯ
+show_information,ХОТЕТЬ УЗНАТЬ ИНФОРМАЦИЯ ПАЦИЕНТ
+show_information,ИНФОРМАЦИЯ ПАЦИЕНТ
+show_information,КАРТОЧКА ПАЦИЕНТ
+show_information,КАРТА ПАЦИЕНТ
+show_information,ПОКАЗАТЬ КАРТОЧКА ПАЦИЕНТ
+show_information,ПОКАЗАТЬ КАРТА ПАЦИЕНТ
+show_information,ВЫДАТЬ КАРТА ПАЦИЕНТ
+show_information,ВЫДАТЬ ИНФОРМАЦИЯ ПАЦИЕНТ ИВАНОВ
+show_information,НАЙТИ
+show_information,НАЙТИ
+add_biomark,ПОКАЗАТЕЛЬ
+add_biomark,ДОБАВИТЬ ПОКАЗАТЕЛЬ
+add_biomark,ДОБАВИТЬ ПОКАЗАНИЕ
+add_biomark,ЗАДАТЬ ПОКАЗАТЕЛИ ПАЦИЕНТ
+add_biomark,УСТАНОВИТЬ ПОКАЗАТЕЛИ ПАЦИЕНТ
+add_biomark,ПАЦИЕНТ ВВЕСТИ ПОКАЗАТЕЛИ
+add_biomark,ПАЦИЕНТ ХОТЕТЬ ДОБАВИТЬ ПОКАЗАТЕЛИ
+add_biomark,ПАЦИЕНТ ХОТЕТЬ ДОБАВИТЬ ПОКАЗАНИЕ
+load_file,ФАЙЛ
+load_file,ЗАГРУЗИТЬ ФАЙЛ
+load_file,ПРИНЯТЬ ФАЙЛ
+load_file,ЗАГРУЗИТЬ КАРТИНКА
+load_file,ЗАГРУЗИТЬ РЕШЕНИЕ ВРАЧ
+load_file,ЗАГРУЗИТЬ ВРАЧЕБНОЕ РЕШЕНИЕ
+load_file,ПРИНЯТЬ ФАЙЛИК
+load_file,ПРИНЯТЬ РЕЗУЛЬТАТЫ ИССЛЕДОВАНИЕ
+load_file,ПРИНЯТЬ РЕЗУЛЬТАТЫ ИССЛЕДОВАНИЕ
+show_plot,ВЫВЕСТИ ГРАФИК ПРИЛОЖЕНИЕ
+show_plot,ПОКАЗАТЬ ГРАФИК
+show_plot,ГРАФИК
+show_plot,ВЫВЕСТИ ГРАФИК МОЙ ПОКАЗАТЕЛЬ
+show_plot,ВЫВЕСТИ ГРАФИК ПОКАЗАНИЕ
+show_plot,НУЖНЫЙ ГРАФИК ПОКАЗАТЕЛЬ
+show_plot,ВЫВЕСТИ ДАННЫЕ ВЧЕРАШНИЙ ПОВОД ДАВЛЕНИЕ
+show_plot,ВЫВЕСТИ ДАННЫЕ ДАВЛЕНИЕ
+show_plot,ДАННЫЕ ДАВЛЕНИЕ ПОСЛЕДНИЙ
+show_plot,ДАТЬ ДАННЫЕ ДАВЛЕНИЕ

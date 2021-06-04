@@ -13,10 +13,8 @@ using ZulipAPI;
 using System.Net;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
-using WebApp.Models;
-using nl_fhir;
 
-namespace WebApp
+namespace TelegramBotConsole
 {
     class BiomarkForApp
     {
@@ -117,16 +115,8 @@ namespace WebApp
         public static DialogueFrame GetDialogueFrame(Update e, HealthBotContext ctx, users dbUser)
         {
             string txt;
-            if (e.Message.Text == null) txt = e.Message.Caption.ToLower();  
+            if (e.Message.Text == null) txt = e.Message.Caption.ToLower();  //лучше смотреть тип сообщения
             else txt = e.Message.Text.ToLower();
-            return AnylizeMessage(txt, ctx, dbUser);
-        }
-
-        public static DialogueFrame GetDialogueFrame(Message e, HealthBotContext ctx, users dbUser)
-        {
-            string txt;
-            if (e.Text == null) txt = e.Caption.ToLower();  
-            else txt = e.Text.ToLower();
             return AnylizeMessage(txt, ctx, dbUser);
         }
 
@@ -163,52 +153,6 @@ namespace WebApp
             EnumActivity ea = EnumActivity.DoNothing;
             string ent = "";
             object tag = null;
-            string txt = null;
-
-            var intent = Shared.NL.GetActionFromText(message);
-
-            if (dbUser.chatting != null && dbUser.chatting != "")
-            {
-                ea = EnumActivity.Chatting;
-                ent = message;
-            }
-            else if (message == "/start")
-            {
-                ea = EnumActivity.ConversationStart;
-            }
-            else
-            {
-                switch (intent)
-                {
-                    case ActionsEnum.Actions.ReadMyBiomarkers:
-                        txt = "запиши мои показания";
-                        break;
-                    case ActionsEnum.Actions.LoadFile:
-                        txt = "загрузи файл";
-                        break;
-                    case ActionsEnum.Actions.AddBiomarks:
-                        txt = "добавь показатели";
-                        break;
-                    case ActionsEnum.Actions.ConversationStart:
-                        txt = "/start";
-                        break;
-                    case ActionsEnum.Actions.SendToApp:
-                        txt = "покажи мне график приложения";
-                        break;
-                    case ActionsEnum.Actions.ConnectToMobileApp:
-                        txt = "покажи мне график приложения";
-                        break;
-                    case ActionsEnum.Actions.CallHuman:
-                        txt = "позови человека";
-                        break;
-                    case ActionsEnum.Actions.PrintBiomarks:
-                        txt = "выведи показания";
-                        break;
-                    case ActionsEnum.Actions.SecretMessage:
-                        txt = "secret";
-                        break;
-                }
-            }
 
             if(dbUser.chatting!=null && dbUser.chatting != "")
             {
@@ -217,6 +161,7 @@ namespace WebApp
             }
             else
             {
+                var txt = FindActivityEntityInTable(message.Replace(",", "").Replace(".", "").Replace(":", "").Split(' '), ctx);
                 if (txt == null) txt = message;
 
                 if (txt == "запиши мои показания")
@@ -258,7 +203,7 @@ namespace WebApp
                 {
                     ea = EnumActivity.PrintBiomarks;
                 }
-                else if (txt == "secret")
+                else if (txt == "секретное сообщение")
                 {
                     ea = EnumActivity.SecretMessage;
                 }

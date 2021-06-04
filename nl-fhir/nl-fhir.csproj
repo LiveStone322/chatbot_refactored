@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>nl_fhir</RootNamespace>
+    <Platforms>AnyCPU;x64</Platforms>
+    <ApplicationIcon />
+    <StartupObject />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Catalyst.ConceptNet.Russian" Version="1.0.15657" />
+    <PackageReference Include="Catalyst.Models.English" Version="1.0.16625" />
+    <PackageReference Include="Catalyst.Models.Russian" Version="1.0.16625" />
+    <PackageReference Include="dotnet-stop-words" Version="1.1.0" />
+    <PackageReference Include="DynamicLanguageRuntime" Version="1.3.0" />
+    <PackageReference Include="Hl7.Fhir.R4" Version="3.1.0" />
+    <PackageReference Include="IronPython" Version="2.7.11" />
+    <PackageReference Include="IronPython.StdLib" Version="2.7.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
+    <PackageReference Include="Microsoft.ML" Version="1.5.5" />
+    <PackageReference Include="Microsoft.ML.CpuMath" Version="1.5.5" />
+    <PackageReference Include="NltkNet" Version="1.0.14" />
+    <PackageReference Include="Pullenti.Core" Version="4.3.0" />
+    <PackageReference Include="Python.Included" Version="3.7.3.13" />
+    <PackageReference Include="SharpLearning.InputOutput" Version="0.31.8" />
+    <PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\nl-fhirML.Model\nl-fhirML.Model.csproj" />
+  </ItemGroup>
+
+</Project>
