@@ -15,5 +15,7 @@ namespace WebApp.Models
         public static IICQBotClient icqBot { get; set; }
 
         public static nl_fhir.NLModel NL { get; set; }
+
+        public static DBFacade DBF { get; set; }
     }
 }

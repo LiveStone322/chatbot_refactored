@@ -18,12 +18,20 @@ namespace WebApp
         {
             RunNotificationsSender();
 
-            RunBot();
+            InitializeSharedModels();
+
+            RunBots();
 
             CreateHostBuilder(args).Build().Run();
         }
 
-        private static void RunBot()
+        private static void InitializeSharedModels()
+        {
+            Shared.NL = new nl_fhir.NLModel();
+            Shared.DBF = new DBFacade();
+        }
+
+        private static void RunBots()
         {
             Shared.icqBot = new ICQBotClient(AppInfo.IcqToken);
             Shared.telegramBot = new Telegram.Bot.TelegramBotClient(AppInfo.TelegramToken);
@@ -106,11 +114,7 @@ namespace WebApp
 
         private static void SendNotifications()
         {
-            using (var ctx = new HealthBotContext())
-            {
-                var notificatedUsers = ctx.users.Where(t => ctx.notifications.Where(n => CheckTime(n.on_time)).Select(q => q.id).Contains(t.id)).Select(e => e.id);
-
-            };
+            // todo
         }
 
         private static bool CheckTime(DateTime? datetime)

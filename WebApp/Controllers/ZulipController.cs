@@ -33,20 +33,6 @@ namespace WebApp.Controllers
                 body = await reader.ReadToEndAsync();
             dynamic data = Newtonsoft.Json.Linq.JObject.Parse(body)["data"];
 
-            using (var ctx = new HealthBotContext())
-            {
-                var user = ctx.users.Find(6);
-                if (user.chatting == "telegram")
-                    await Bots.telegramBot.SendTextMessageAsync(
-                        chatId: user.telegram_chat_id,
-                        text: data.ToString().Replace("@**Bot**", "")
-                        );
-                else await Bots.viberBot.SendTextMessageAsync(new TextMessage()
-                {
-                    Text = "заглушка",
-                    Receiver = user.loginViber
-                });
-            }
             return Ok();
         }
 
