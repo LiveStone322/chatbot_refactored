@@ -7,6 +7,7 @@ namespace WebApp.Models
 {
     public enum DBContextTypeEnum
     {
+        Entities,
         LastBotMessages,
         LastUserMessages,
         Mode
@@ -33,6 +34,7 @@ namespace WebApp.Models
             }
         }
 
+        public DBCEntities entities { get; set; }
         public DBCLastBotMessages[] lastBotMessages { get; set; }
         public DBCLastUserMessages[] lastUserMessages { get; set; }
         public DBCMode mode { get; set; }
@@ -40,14 +42,17 @@ namespace WebApp.Models
         public DBParsedContext()
         {
             notNullContext_ = new DBContextTypeEnum[] { };
+            entities = null;
             lastBotMessages = null;
             lastUserMessages = null;
             mode = null;
         }
 
+        //after context update
         public void UpdateNotNullContext()
         {
             var list = new List<DBContextTypeEnum>();
+            if (entities != null) list.Add(DBContextTypeEnum.Entities);
             if (lastBotMessages != null && lastBotMessages.Length > 0) list.Add(DBContextTypeEnum.LastBotMessages);
             if (lastUserMessages != null && lastUserMessages.Length > 0) list.Add(DBContextTypeEnum.LastUserMessages);
             if (mode != null) list.Add(DBContextTypeEnum.Mode);
@@ -61,30 +66,43 @@ namespace WebApp.Models
         public DBContextTypeEnum Type { get; set; }
     }
 
+    public class DBCEntities : DBContextBase
+    {
+        public Tuple<string, string>[] Value { get; set; }
+        public DBCEntities()
+        {
+            Type = DBContextTypeEnum.Entities;
+            Value = new Tuple<string, string>[] { };
+        }
+    }
+
     public class DBCLastBotMessages : DBContextBase
     {
-        public string Test { get; set; } = "test!";
+        public string Value { get; set; }
         public DBCLastBotMessages()
         {
             Type = DBContextTypeEnum.LastBotMessages;
+            Value = "";
         }
     }
 
     public class DBCLastUserMessages : DBContextBase
     {
+        public string Value { get; set; }
         public DBCLastUserMessages()
         {
             Type = DBContextTypeEnum.LastUserMessages;
+            Value = "";
         }
     }
 
     public class DBCMode : DBContextBase
     {
-        public DBCModeEnum Mode { get; set; }
+        public DBCModeEnum Value { get; set; }
         public DBCMode()
         {
             Type = DBContextTypeEnum.Mode;
-            Mode = DBCModeEnum.UNKNOWN;
+            Value = DBCModeEnum.UNKNOWN;
         }
     }
 

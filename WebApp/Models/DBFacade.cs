@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Npgsql;
 
 namespace WebApp.Models
@@ -45,7 +46,7 @@ namespace WebApp.Models
         private int AddCommonUser(string fio, string phone = "", string context = "", string token = "")
         {
             var command = new NpgsqlCommand(
-                    "INSERT INTO users (fio, phone_number, context, token) " + 
+                    "INSERT INTO users (fio, phone_number, context, token) " +
                     "VALUES(@fio, @phone_number, @context, @token) RETURNING id",
                     conn
                 );
@@ -56,7 +57,7 @@ namespace WebApp.Models
             return (int)command.ExecuteScalar();   //returns new id
         }
 
-        public DBUser AddUser(Sources source, string username, long chatId, 
+        public DBUser AddUser(Sources source, string username, long chatId,
                             string fio = "", string phone = "", string context = "")
         {
             var command = new NpgsqlCommand(
@@ -69,6 +70,26 @@ namespace WebApp.Models
 
             return GetUser(source, chatId);
 
+        }
+
+        public Tuple<string, string>[] GetNeededEntities(string v)
+        {
+            var list = new List<Tuple<string, string>>();
+            var command = new NpgsqlCommand(
+                     $"SELECT e.name, question " +
+                     $"FROM entities AS e JOIN intents_entities AS ie ON e.id = ie.id_entity JOIN intents AS i ON ie.id_intent = i.id " +
+                     $"WHERE i.name = @intent;",
+                     conn
+                 );
+            CreateParameter(command, "@intent", v);
+            using (var reader = command.ExecuteReader())
+            {
+                while(reader.Read())
+                {
+                    list.Add(new Tuple<string, string>((string)reader[0], (string)reader[1]));
+                }
+            }
+            return list.ToArray();
         }
 
         public DBUser GetUser(Sources source, long chatId)
@@ -95,7 +116,7 @@ namespace WebApp.Models
         {
             var command = new NpgsqlCommand(
                    $"SELECT format, question " +
-                   $"FROM entities WHERE name == @name;",
+                   $"FROM entities WHERE name = @name;",
                    conn
                );
             CreateParameter(command, "@name", value);

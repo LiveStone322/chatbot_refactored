@@ -32,27 +32,25 @@ namespace nl_fhir
             model = new ConsumeModel();
         }
 
-        // static List<NamedEntity> listNamedEntities = new List<NamedEntity>();
-
         public NLResult[] GetActionsFromText(string text)
         {
-            text = "запиши давление 75 на 80 и еще температуру 35,5, настроение плохое. Еще добавь что-нибудь о моем тетрохлобине. Добавь пациента Олега Хуева. Ну и введи токен приложения";
+            text = "запиши давление 75 на 80 и еще температуру 35,5, настроение плохое. Еще добавь что-нибудь о моем тетрохлобине. Добавь пациента Олега Хуева. Ну и введи токен приложения 14asd-1as45d1-a65s1d51";
             var infos = GetTextInfos(text);
             var listResults = new List<NLResult>();
 
             foreach(var i in infos)
             {
-                listResults.Add(new NLResult(ConsumeModel.Predict(new ModelInput() { Text = i.Item1 }), i.Item1.Trim(), i.Item2));
+                listResults.Add(new NLResult(ConsumeModel.Predict(new ModelInput() { Text = i.Item1 }), i.Item3.Trim(), i.Item2));
             }
 
             return listResults.ToArray();
         }
 
-        public Tuple<string, Keyword[]>[] GetTextInfos(string text)
+        public Tuple<string, Keyword[], string>[] GetTextInfos(string text)
         {
             var ar = processor.Process( new SourceOfAnalysis(StopWord.StopWordsExtension.RemoveStopWords(text, "ru")));
             var sem = SemanticService.Process(ar);
-            var listIntents = new List<Tuple<string, Keyword[]>>();
+            var listIntents = new List<Tuple<string, Keyword[], string>>();
 
             foreach (var b in sem.Blocks)
                 foreach (var f in b.Fragments)
@@ -62,10 +60,13 @@ namespace nl_fhir
             return listIntents.ToArray();
         }
 
-        private static Tuple<string, Keyword[]> GetTextInfoInFragment(SemFragment frag, List<Keyword> keywords = null)
+        private static Tuple<string, Keyword[], string> GetTextInfoInFragment(SemFragment frag, List<Keyword> keywords = null)
         {
             if (keywords == null) keywords = new List<Keyword>();
+            var added = false;
+            var value = "";
             var result = "";
+            var resultForEntities = "";
             var skipping = ((ReferentToken)frag.BeginToken.Kit.FirstToken).BeginToken != frag.BeginToken;
             if (frag.BeginToken != null && frag.BeginToken.Kit != null && frag.BeginToken.Kit.FirstToken != null)
             {
@@ -77,28 +78,33 @@ namespace nl_fhir
                         else skipping = t.Next != frag.BeginToken;
                         continue;
                     }
-                     var refer = t.GetReferent();
+                    var refer = t.GetReferent();
                     if (refer is KeywordReferent && ((KeywordReferent)refer).ChildWords < 2)
                         if ((refer as KeywordReferent).Typ == KeywordType.Object)
-                            keywords.Add(new Keyword() { Value = (refer as KeywordReferent).Value, Position = t.BeginChar });
-
-                    if (t is ReferentToken)
-                    {
-                        if (t is MetaToken)
                         {
-                            for (var j = ((MetaToken)t).BeginToken; j != ((MetaToken)t).EndToken && t != null; j = j.Next)
-                            {
-                                var refer2 = j.GetReferent();
-                                if (refer2 is KeywordReferent)
-                                    if ((refer2 as KeywordReferent).Typ == KeywordType.Object)
-                                        keywords.Add(new Keyword() { Value = (refer2 as KeywordReferent).Value, Position = t.BeginChar });
-                            }
+                            value = (refer as KeywordReferent).Value;
+                            added = true;
                         }
-                        result += t.GetNormalCaseText() + " ";
+
+                    if (t is NumberToken || t is ReferentToken || t is TextToken)
+                    {
+                        if (added)
+                        {
+                            keywords.Add(new Keyword() { Value = value, Position = resultForEntities.Length });
+                            added = false;
+                        }
+                        if (t is TextToken && resultForEntities.Length > 0 && resultForEntities[resultForEntities.Length - 1] == ' ')
+                            resultForEntities = resultForEntities.Substring(0, resultForEntities.Length - 1);
+                        resultForEntities += (t is TextToken && t.Previous != null && t.Next != null && (t.Previous.GetType() == t.Next.GetType())) 
+                            ? t.GetNormalCaseText() 
+                            : t.GetNormalCaseText() + " ";
                     }
+
+                    
                 }
             }
-            return new Tuple<string, Keyword[]>(result, keywords.ToArray());
+            resultForEntities = resultForEntities.Trim();
+            return new Tuple<string, Keyword[], string>(result, keywords.ToArray(), resultForEntities);
         }
 
         private static void Print(Token initialT)

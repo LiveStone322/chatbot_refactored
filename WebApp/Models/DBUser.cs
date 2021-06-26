@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace WebApp.Models
@@ -38,6 +39,8 @@ namespace WebApp.Models
         public void SetContext(List<DBContextBase> newContext)
         {
             Context = newContext;
+
+            Shared.DBF.SetContext(Id, ContextString);
         }
 
         public void AddToContext(DBContextBase newContext)
@@ -61,6 +64,7 @@ namespace WebApp.Models
         {
             var parsed = new DBParsedContext();
 
+            parsed.entities = (DBCEntities)GetFirstFromContext(DBContextTypeEnum.Entities);
             parsed.lastBotMessages = GetAllFromContext(DBContextTypeEnum.LastBotMessages).Select(t => (DBCLastBotMessages)t).ToArray();
             parsed.lastUserMessages = GetAllFromContext(DBContextTypeEnum.LastUserMessages).Select(t => (DBCLastUserMessages)t).ToArray();
             parsed.mode = (DBCMode)GetFirstFromContext(DBContextTypeEnum.Mode);
@@ -68,6 +72,45 @@ namespace WebApp.Models
             parsed.UpdateNotNullContext();
 
             return parsed;
+        }
+
+        public void SetContextElement(DBContextTypeEnum type, object value)
+        {
+            foreach (var c in Context)
+            {
+                if (c.Type == type)
+                {
+                    ((dynamic)c).Value = value;
+                    SetContext(Context);
+                    return;
+                }
+            }
+            AddToContext(GetNewBaseContext(type, value));
+        }
+
+        public DBContextBase GetNewBaseContext(DBContextTypeEnum type, object value = null)
+        {
+            DBContextBase db = null;
+            switch(type)
+            {
+                case DBContextTypeEnum.Entities:
+                    db = new DBCEntities();
+                    if (value != null) ((dynamic)db).Value = value;
+                    break;
+                case DBContextTypeEnum.LastBotMessages:
+                    db = new DBCLastBotMessages();
+                    if (value != null) ((dynamic)db).Value = value;
+                    break;
+                case DBContextTypeEnum.LastUserMessages:
+                    db = new DBCLastUserMessages();
+                    if (value != null) ((dynamic)db).Value = value;
+                    break;
+                case DBContextTypeEnum.Mode:
+                    db = new DBCMode();
+                    if (value != null) ((dynamic)db).Value = value;
+                    break;
+            }
+            return db;
         }
     }
 }
