@@ -27,7 +27,7 @@ namespace Nl_fhirML.Model
             MLContext mlContext = new MLContext();
 
             // Load model & create prediction engine
-            string modelPath = @"D:\studying\FHIR\NL-FHIR\nl-fhir\nl-fhirML.ConsoleApp\Data\MLModel.zip";
+            string modelPath = @"D:\studying\FHIR\chatbot\nl-fhirML.ConsoleApp\Data\MLModel.zip";
             ITransformer mlModel = mlContext.Model.Load(modelPath, out var modelInputSchema);
             var predEngine = mlContext.Model.CreatePredictionEngine<ModelInput, ModelOutput>(mlModel);
 

@@ -10,6 +10,7 @@ namespace WebApp.Models
 {
     public class Shared
     {
+        public static readonly double threshold = 0.8;
         public static IViberBotClient viberBot { get; set; }
         public static ITelegramBotClient telegramBot { get; set; }
         public static IICQBotClient icqBot { get; set; }

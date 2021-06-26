@@ -12,8 +12,8 @@ namespace Nl_fhirML.ConsoleApp
 {
     public static class ModelBuilder
     {
-        private static string TRAIN_DATA_FILEPATH = @"D:\studying\FHIR\NL-FHIR\nl-fhir\nl-fhirML.ConsoleApp\Data\norm-data.csv";
-        private static string MODEL_FILEPATH = @"D:\studying\FHIR\NL-FHIR\nl-fhir\nl-fhirML.ConsoleApp\Data\MLModel.zip";
+        private static string TRAIN_DATA_FILEPATH = @"D:\studying\FHIR\chatbot\nl-fhirML.ConsoleApp\Data\norm-data.csv";
+        private static string MODEL_FILEPATH = @"D:\studying\FHIR\chatbot\nl-fhirML.ConsoleApp\Data\MLModel.zip";
         // Create MLContext to be shared across the model creation workflow objects 
         // Set a random seed for repeatable/deterministic results across multiple trainings.
         private static MLContext mlContext = new MLContext(seed: 1);
@@ -24,7 +24,7 @@ namespace Nl_fhirML.ConsoleApp
             IDataView trainingDataView = mlContext.Data.LoadFromTextFile<ModelInput>(
                                             path: TRAIN_DATA_FILEPATH,
                                             hasHeader: true,
-                                            separatorChar: ';',
+                                            separatorChar: ',',
                                             allowQuoting: true,
                                             allowSparse: false);
 

@@ -9,7 +9,7 @@
     <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
     <PackageReference Include="ICQ.Bot" Version="1.4.6" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.6" />
-    <PackageReference Include="Telegram.Bot" Version="15.5.1" />
+    <PackageReference Include="Telegram.Bot" Version="16.0.0" />
     <PackageReference Include="viber.bot" Version="1.0.1" />
     <PackageReference Include="ZulipAPI" Version="0.2.1" />
   </ItemGroup>

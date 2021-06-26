@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WebApp.Models
 {
-    public static class Dictionaries
+    public static class DBDictionaries
     {
         public static readonly Dictionary<Sources, string> sourcesDic = new Dictionary<Sources, string>()
         {

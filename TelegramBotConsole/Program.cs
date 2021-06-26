@@ -40,19 +40,6 @@ namespace TelegramBotConsole
         static async void Bot_OnMessage(object sender, MessageEventArgs e)
         {
             Console.WriteLine($"Получил сообщение в чате {e.Message.Chat.Id}.");
-
-            var intent = nl.GetActionFromText(e.Message.Text);
-
-            switch (intent)
-            {
-                case ActionsEnum.Actions.ADD_USER:
-                    break;
-                default:
-                    break;
-            }
-
-            var answer = nl.GetNormalizedText(e.Message.Text);
-            if (answer.Length > 0) await teleBot.SendTextMessageAsync(e.Message.Chat, answer);
         }
 
     }

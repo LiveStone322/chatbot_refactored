@@ -42,15 +42,51 @@ namespace WebApp.Controllers
 
         private static async void ProcessMessage(User tlgrmUser, Message message)
         {
-            
+            string nextMessage = "";
+            List<string> entities = new List<string>();
             var text = message.Text;
-            var answer = Shared.NL.GetNormalizedText(text);
-            var intent = Shared.NL.GetActionFromText(text);
+            var intentList = Shared.NL.GetActionsFromText(text);
+            if (intentList.Length == 0) return;
 
-            Shared.DBF.AddUser(Sources.TELEGRAM, message.From.Username, message.Chat.Id, message.From.FirstName);
+            var user = Shared.DBF.GetOrCreateUser(Sources.TELEGRAM,  message.Chat.Id, tlgrmUser.Username, tlgrmUser.FirstName);
+            //возможно легче на dynamic cделать
+            var parsedContext = user.GetParsedContext();
 
-            await Shared.telegramBot.SendTextMessageAsync(message.Chat.Id, answer);
+            var intent = intentList[0];
+            var keywords = new List<Pullenti.Ner.Keyword.KeywordReferent>();
 
+            foreach (var i in intentList)
+            {
+                foreach (var k in i.Keywords)
+                    keywords.Add(k);
+            }
+            keywords = keywords.Distinct().ToList();
+
+            switch (intent.Result)
+            {
+                case nl_fhir.ActionsEnum.Actions.ReadMyBiomarkers:
+                    Shared.FindNextQuestion(intent);
+                    break;
+                case nl_fhir.ActionsEnum.Actions.LoadFile:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.ADD_BIOMARK:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.GetPlot:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.SendToApp:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.ConnectToMobileApp:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.CallHuman:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.SecretMessage:
+                    break;
+                case nl_fhir.ActionsEnum.Actions.Answer:
+                    break;
+            }
+
+
+            await Shared.telegramBot.SendTextMessageAsync(message.Chat.Id, "+");
         }
 
         private static async void DownloadFile(string fileId, string path)
