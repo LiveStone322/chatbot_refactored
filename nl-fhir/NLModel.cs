@@ -15,6 +15,12 @@ using Pullenti.Ner.Keyword;
 
 namespace nl_fhir
 {
+    public struct Keyword
+    {
+        public string Value;
+        public int Position;
+    }
+
     public class NLModel
     {
         Processor processor;
@@ -30,23 +36,23 @@ namespace nl_fhir
 
         public NLResult[] GetActionsFromText(string text)
         {
-            text = "запиши давление 75 на 80 и еще температуру 35,5, настроение плохое. Еще добавь что-нибудь о моем самочувствии. Добавь пациента Олега Хуева. Ну и введи токен приложения";
+            text = "запиши давление 75 на 80 и еще температуру 35,5, настроение плохое. Еще добавь что-нибудь о моем тетрохлобине. Добавь пациента Олега Хуева. Ну и введи токен приложения";
             var infos = GetTextInfos(text);
             var listResults = new List<NLResult>();
 
             foreach(var i in infos)
             {
-                listResults.Add(new NLResult(ConsumeModel.Predict(new ModelInput() { Text = i.Item1 }), i.Item2));
+                listResults.Add(new NLResult(ConsumeModel.Predict(new ModelInput() { Text = i.Item1 }), i.Item1.Trim(), i.Item2));
             }
 
             return listResults.ToArray();
         }
 
-        public Tuple<string, KeywordReferent[]>[] GetTextInfos(string text)
+        public Tuple<string, Keyword[]>[] GetTextInfos(string text)
         {
             var ar = processor.Process( new SourceOfAnalysis(StopWord.StopWordsExtension.RemoveStopWords(text, "ru")));
             var sem = SemanticService.Process(ar);
-            var listIntents = new List<Tuple<string, KeywordReferent[]>>();
+            var listIntents = new List<Tuple<string, Keyword[]>>();
 
             foreach (var b in sem.Blocks)
                 foreach (var f in b.Fragments)
@@ -56,9 +62,9 @@ namespace nl_fhir
             return listIntents.ToArray();
         }
 
-        private static Tuple<string, KeywordReferent[]> GetTextInfoInFragment(SemFragment frag, List <KeywordReferent> keywords = null)
+        private static Tuple<string, Keyword[]> GetTextInfoInFragment(SemFragment frag, List<Keyword> keywords = null)
         {
-            if (keywords == null) keywords = new List<KeywordReferent>();
+            if (keywords == null) keywords = new List<Keyword>();
             var result = "";
             var skipping = ((ReferentToken)frag.BeginToken.Kit.FirstToken).BeginToken != frag.BeginToken;
             if (frag.BeginToken != null && frag.BeginToken.Kit != null && frag.BeginToken.Kit.FirstToken != null)
@@ -71,10 +77,10 @@ namespace nl_fhir
                         else skipping = t.Next != frag.BeginToken;
                         continue;
                     }
-                    var refer = t.GetReferent();
+                     var refer = t.GetReferent();
                     if (refer is KeywordReferent && ((KeywordReferent)refer).ChildWords < 2)
                         if ((refer as KeywordReferent).Typ == KeywordType.Object)
-                            keywords.Add(refer as KeywordReferent);
+                            keywords.Add(new Keyword() { Value = (refer as KeywordReferent).Value, Position = t.BeginChar });
 
                     if (t is ReferentToken)
                     {
@@ -85,14 +91,14 @@ namespace nl_fhir
                                 var refer2 = j.GetReferent();
                                 if (refer2 is KeywordReferent)
                                     if ((refer2 as KeywordReferent).Typ == KeywordType.Object)
-                                        keywords.Add(refer2 as KeywordReferent);
+                                        keywords.Add(new Keyword() { Value = (refer2 as KeywordReferent).Value, Position = t.BeginChar });
                             }
                         }
                         result += t.GetNormalCaseText() + " ";
                     }
                 }
             }
-            return new Tuple<string, KeywordReferent[]>(result, keywords.ToArray());
+            return new Tuple<string, Keyword[]>(result, keywords.ToArray());
         }
 
         private static void Print(Token initialT)

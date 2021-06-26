@@ -74,8 +74,8 @@ namespace WebApp.Models
         public DBUser GetUser(Sources source, long chatId)
         {
             var command = new NpgsqlCommand(
-                    $"select u.id, u.fio, u.phone_number, u.context, u.token, uu.username, uu.chat_id, uu.id " +
-                    $"from users as u join {DBDictionaries.sourcesDic[source] + "_users"} as uu on u.id = uu.id_user WHERE chat_id = '{chatId}';",
+                    $"SELECT u.id, u.fio, u.phone_number, u.context, u.token, uu.username, uu.chat_id, uu.id " +
+                    $"FROM users AS u join {DBDictionaries.sourcesDic[source] + "_users"} AS uu ON u.id = uu.id_user WHERE chat_id = '{chatId}';",
                     conn
                 );
             using (var reader = command.ExecuteReader())
@@ -86,6 +86,26 @@ namespace WebApp.Models
                 {
                     return new DBUser((int)reader[0], (string)reader[1], (string)reader[2], DBContextHandler.StringToContext((string)reader[3]),
                       reader[4] == DBNull.Value ? "" : (string)reader[4], (string)reader[5], (int)reader[6], source, (int)reader[7]);
+                }
+            }
+            return null;
+        }
+
+        public Tuple<string, string> GetEntityData(string value)
+        {
+            var command = new NpgsqlCommand(
+                   $"SELECT format, question " +
+                   $"FROM entities WHERE name == @name;",
+                   conn
+               );
+            CreateParameter(command, "@name", value);
+            using (var reader = command.ExecuteReader())
+            {
+                reader.Read();
+
+                if (reader.HasRows)
+                {
+                    return new Tuple<string, string>((string)reader[0], (string)reader[1]);
                 }
             }
             return null;

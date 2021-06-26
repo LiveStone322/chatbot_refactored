@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
+using System.Text.RegularExpressions;
 using Telegram.Bot.Types;
 using WebApp.Models;
 using Newtonsoft.Json;
@@ -43,7 +44,7 @@ namespace WebApp.Controllers
         private static async void ProcessMessage(User tlgrmUser, Message message)
         {
             string nextMessage = "";
-            List<string> entities = new List<string>();
+            List<Tuple<string, string>> entities = null;
             var text = message.Text;
             var intentList = Shared.NL.GetActionsFromText(text);
             if (intentList.Length == 0) return;
@@ -53,19 +54,20 @@ namespace WebApp.Controllers
             var parsedContext = user.GetParsedContext();
 
             var intent = intentList[0];
-            var keywords = new List<Pullenti.Ner.Keyword.KeywordReferent>();
+
+            entities = GetEntities(intent);
+
+            var keywords = new List<nl_fhir.Keyword>();
 
             foreach (var i in intentList)
             {
                 foreach (var k in i.Keywords)
                     keywords.Add(k);
             }
-            keywords = keywords.Distinct().ToList();
 
             switch (intent.Result)
             {
                 case nl_fhir.ActionsEnum.Actions.ReadMyBiomarkers:
-                    Shared.FindNextQuestion(intent);
                     break;
                 case nl_fhir.ActionsEnum.Actions.LoadFile:
                     break;
@@ -87,6 +89,28 @@ namespace WebApp.Controllers
 
 
             await Shared.telegramBot.SendTextMessageAsync(message.Chat.Id, "+");
+        }
+
+        private static List<Tuple<string, string>> GetEntities(nl_fhir.NLResult intent)
+        {
+            var entities = new List<Tuple<string, string>>();
+
+            foreach (var k in intent.Keywords)
+            {
+                string regexp = Shared.DBF.GetEntityData(k.Value).Item1;
+                var match = Regex.Match(intent.Text, regexp);
+                string result = "";
+                if (match.Groups.Count > 1)
+                {
+                    for (int i = 1; i < match.Groups.Count; i++)
+                        result += match.Groups[i] + ";";
+                    result = result.Substring(0, result.Length - 1);  //можно было бы сделать через While
+                }
+                else result = match.Value;
+                entities.Add(new Tuple<string, string>(k.Value, result));
+            }
+
+            return entities;
         }
 
         private static async void DownloadFile(string fileId, string path)
