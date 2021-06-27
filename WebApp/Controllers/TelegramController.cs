@@ -10,6 +10,7 @@ using WebApp.Models;
 using Newtonsoft.Json;
 using Telegram.Bot.Args;
 using System.Net;
+using System.Text;
 
 //dotnet publish -c Release -r linux-x64 --self-contained true
 namespace WebApp.Controllers
@@ -58,6 +59,12 @@ namespace WebApp.Controllers
             var user = Shared.DBF.GetOrCreateUser(Sources.TELEGRAM, message.Chat.Id, tlgrmUser.Username, tlgrmUser.FirstName);
             var parsedContext = user.GetParsedContext(); 
 
+            if (parsedContext.chating.Value)
+            {
+                SendToZulip(user, text, false);
+                return new Tuple<nl_fhir.NLResult, string>(intent, "");
+            }
+
             if (parsedContext.lookingFor != null)
             {
                 string answer = TryGetAnswer(text, parsedContext.lookingFor.Value[0].Item2);
@@ -84,7 +91,7 @@ namespace WebApp.Controllers
 
                 intent = intentList[0];
                 if (intent.Result == nl_fhir.ActionsEnum.Actions.ReadMyBiomarkers)
-                    neededEntities = Shared.DBF.GetUserBiomarksSubscribtion();
+                    neededEntities = Shared.DBF.GetUserBiomarksSubscribtion(user);
                 else neededEntities = Shared.DBF.GetNeededEntities(intent.Result.ToString());
 
                 if (neededEntities.Length > 0)
@@ -123,14 +130,22 @@ namespace WebApp.Controllers
                     }
                     return "Добавлено!\n" + addedBiomarks;
                 case nl_fhir.ActionsEnum.Actions.GetPlot:
-                    return App_GetPlot(user.Token, DateTime.MinValue, DateTime.Now, context);
+                    return App_GetPlot(user.Token, DateTime.MinValue, DateTime.Now, context.entities.Value[0].Item1);
                     break;
                 case nl_fhir.ActionsEnum.Actions.SendToApp:
-                    return App_AddRecord(user.Token, dbUser.context, DateTime.Now, context);
+                    return App_AddRecord(user.Token, context.entities.Value[0].Item1, DateTime.Now, context.entities.Value[0].Item2);
                     break;
                 case nl_fhir.ActionsEnum.Actions.ConnectToMobileApp:
+                    user.Token = context.entities.Value[0]?.Item2 ?? "";
+                    if (user.Token == "") return "Ошибка. Не найден токен. Попробуйте ввести его снова";
+                    else
+                    {
+                        Shared.DBF.SetUser(user);
+                        return "Успешно!";
+                    }
                     break;
                 case nl_fhir.ActionsEnum.Actions.CallHuman:
+                    user.SetContextElement(DBContextTypeEnum.Chatting, true);
                     break;
                 case nl_fhir.ActionsEnum.Actions.SecretMessage:
                     break;
@@ -227,11 +242,6 @@ namespace WebApp.Controllers
 
             return App_GetResponse(@"http://285f7a81.ngrok.io/main/getplot", "GET", postParams, tokenValue + ".png");
 
-        }
-
-        private static biomarks[] GetUsersBiomarks(users dbUser, HealthBotContext ctx)
-        {
-            return ctx.biomarks.Where(t => ctx.users_biomarks.Where(q => q.id_user == dbUser.id).Select(z => z.id_biomark).Contains(t.id)).ToArray();
         }
 
         private static string TryGetAnswer(string text, string value)

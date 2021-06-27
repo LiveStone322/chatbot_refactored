@@ -11,7 +11,8 @@ namespace WebApp.Models
         Entities,
         LastBotMessages,
         LastUserMessages,
-        Mode
+        Mode,
+        Chatting
     }
 
     public class DBContextSerializable
@@ -72,12 +73,11 @@ namespace WebApp.Models
 
     public class DBCLookingFor : DBContextBase
     {
-        // name, format
         public Tuple<string, string>[] Value { get; set; }
         public DBCLookingFor()
         {
             Type = DBContextTypeEnum.Entities;
-            Value = new Tuple<string, string>[] { };
+            Value = null;
         }
     }
 
