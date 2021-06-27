@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Viber.Bot;
+﻿using Viber.Bot;
 using Telegram.Bot;
 using ICQ.Bot;
 

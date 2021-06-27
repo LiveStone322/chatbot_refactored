@@ -7,6 +7,7 @@ namespace WebApp.Models
 {
     public enum DBContextTypeEnum
     {
+        LookingFor,
         Entities,
         LastBotMessages,
         LastUserMessages,
@@ -34,6 +35,7 @@ namespace WebApp.Models
             }
         }
 
+        public DBCLookingFor lookingFor { get; set; }
         public DBCEntities entities { get; set; }
         public DBCLastBotMessages[] lastBotMessages { get; set; }
         public DBCLastUserMessages[] lastUserMessages { get; set; }
@@ -42,6 +44,7 @@ namespace WebApp.Models
         public DBParsedContext()
         {
             notNullContext_ = new DBContextTypeEnum[] { };
+            lookingFor = null;
             entities = null;
             lastBotMessages = null;
             lastUserMessages = null;
@@ -52,6 +55,7 @@ namespace WebApp.Models
         public void UpdateNotNullContext()
         {
             var list = new List<DBContextTypeEnum>();
+            if (lookingFor != null) list.Add(DBContextTypeEnum.LookingFor);
             if (entities != null) list.Add(DBContextTypeEnum.Entities);
             if (lastBotMessages != null && lastBotMessages.Length > 0) list.Add(DBContextTypeEnum.LastBotMessages);
             if (lastUserMessages != null && lastUserMessages.Length > 0) list.Add(DBContextTypeEnum.LastUserMessages);
@@ -64,6 +68,17 @@ namespace WebApp.Models
     public class DBContextBase
     {
         public DBContextTypeEnum Type { get; set; }
+    }
+
+    public class DBCLookingFor : DBContextBase
+    {
+        // name, format
+        public Tuple<string, string>[] Value { get; set; }
+        public DBCLookingFor()
+        {
+            Type = DBContextTypeEnum.Entities;
+            Value = new Tuple<string, string>[] { };
+        }
     }
 
     public class DBCEntities : DBContextBase

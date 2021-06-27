@@ -64,6 +64,7 @@ namespace WebApp.Models
         {
             var parsed = new DBParsedContext();
 
+            parsed.lookingFor = (DBCLookingFor)GetFirstFromContext(DBContextTypeEnum.LookingFor);
             parsed.entities = (DBCEntities)GetFirstFromContext(DBContextTypeEnum.Entities);
             parsed.lastBotMessages = GetAllFromContext(DBContextTypeEnum.LastBotMessages).Select(t => (DBCLastBotMessages)t).ToArray();
             parsed.lastUserMessages = GetAllFromContext(DBContextTypeEnum.LastUserMessages).Select(t => (DBCLastUserMessages)t).ToArray();
@@ -93,6 +94,10 @@ namespace WebApp.Models
             DBContextBase db = null;
             switch(type)
             {
+                case DBContextTypeEnum.LookingFor:
+                    db = new DBCLookingFor();
+                    if (value != null) ((dynamic)db).Value = value;
+                    break;
                 case DBContextTypeEnum.Entities:
                     db = new DBCEntities();
                     if (value != null) ((dynamic)db).Value = value;
