@@ -36,6 +36,7 @@ namespace WebApp.Models
             }
         }
 
+        public DBCChatting chatting { get; set; }
         public DBCLookingFor lookingFor { get; set; }
         public DBCEntities entities { get; set; }
         public DBCLastBotMessages[] lastBotMessages { get; set; }
@@ -78,6 +79,16 @@ namespace WebApp.Models
         {
             Type = DBContextTypeEnum.Entities;
             Value = null;
+        }
+    }
+
+    public class DBCChatting : DBContextBase
+    {
+        public bool Value { get; set; }
+        public DBCChatting()
+        {
+            Type = DBContextTypeEnum.Entities;
+            Value = false;
         }
     }
 

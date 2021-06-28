@@ -104,7 +104,7 @@ namespace WebApp.Models
             {
                 while(reader.Read())
                 {
-                    list.Add(new Tuple<int, string>((string)reader[0], (string)reader[1]));
+                    list.Add(new Tuple<string, string>((string)reader[0], (string)reader[1]));
                 }
             }
             return list.ToArray();
@@ -169,6 +169,24 @@ namespace WebApp.Models
             command.ExecuteNonQuery();
         }
 
+        public object GetUsersBiomarksValues(DBUser user)
+        {
+            var list = new List<Tuple<string, string>>();
+            var command = new NpgsqlCommand(
+                       $"SELECT e.name, r.value " +
+                       $"FROM users AS u JOIN records_about_users AS r ON u.id = r.id_user WHERE u.id = {user.Id} JOIN entities as e ON r.id_entity = e.id;",
+                       conn
+                   );
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    list.Add(new Tuple<string, string>((string)reader[0], (string)reader[1]));
+                }
+            }
+            return list.ToArray();
+        }
+
         public void SetUser(DBUser user)
         {
             var command = new NpgsqlCommand(
@@ -192,11 +210,6 @@ namespace WebApp.Models
         private void CloseConn()
         {
             if (conn != null && conn.State == System.Data.ConnectionState.Open) conn.Close();
-        }
-
-        internal object GetUsersBiomarksValues(DBUser user)
-        {
-            throw new NotImplementedException();
         }
     }
 }

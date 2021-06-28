@@ -28,7 +28,8 @@ namespace nl_fhir
             UNSURE,
             ADD_USER,
             SHOW_INFORMATION,
-            ADD_BIOMARK
+            ADD_BIOMARK,
+            FHIR_OBSERVATION
         }
 
         public static Actions GetEnumFromText(string txt)
